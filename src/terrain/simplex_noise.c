@@ -1,8 +1,8 @@
 #include <math.h>
 #include "random.h"
 
-#define general_skew (sqrt(3.0) - 1.0) * 0.5;
-#define general_unskew (3.0 - sqrt(3.0)) / 6.0;
+#define general_skew (sqrt(3.0) - 1.0) * 0.5
+#define general_unskew (3.0 - sqrt(3.0)) / 6.0
 
 float grad[8][2];
 
@@ -22,24 +22,10 @@ float dot_product(int i, float x, float y) {
 // Generate the simplex noise data.
 float simplex_noise_2d(float x, float y) {
     float skew_value = (x + y) * general_skew;
-    float cornerb_x = x + skew_value;
-    float cornerb_y = y + skew_value;
+    float cornerb_x = floor(x + skew_value);
+    float cornerb_y = floor(y + skew_value);
 
-    if ( cornerb_x >= 0.0f ) {
-        cornerb_x = floor(cornerb_x + 0.5f);
-    }
-    else {
-        cornerb_x = floor(cornerb_x + 0.5f) - 1.0f;
-    }
-
-    if ( cornerb_y >= 0.0f ) {
-        cornerb_y = floor(cornerb_y + 0.5f);
-    }
-    else {
-        cornerb_y = floor(cornerb_y + 0.5f) - 1.0f;
-    }
-
-    float unskew_value = floor(0.5f + (cornerb_x + cornerb_y)) * general_unskew;
+    float unskew_value = (cornerb_x + cornerb_y) * general_unskew;
 
     float disb_x = x - cornerb_x + unskew_value;
     float disb_y = y - cornerb_y + unskew_value;
@@ -58,8 +44,8 @@ float simplex_noise_2d(float x, float y) {
     float cornert_x = 1.0f + cornerb_x;
     float cornert_y = 1.0f + cornerb_y;
 
-    float dism_x = disb_x - floor(0.5f + (cornerm_x - cornerb_x)) + general_unskew;
-    float dism_y = disb_y - floor(0.5f + (cornerm_y - cornerb_y)) + general_unskew;
+    float dism_x = disb_x - (cornerm_x - cornerb_x) + general_unskew;
+    float dism_y = disb_y - (cornerm_y - cornerb_y) + general_unskew;
 
     float dist_x = disb_x - 1.0f + general_unskew + general_unskew;
     float dist_y = disb_y - 1.0f + general_unskew + general_unskew;
