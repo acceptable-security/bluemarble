@@ -75,14 +75,14 @@ void terrain_fill_map(terrain_t* terrain) {
                 amplitude *= terrain->gain;
             }
 
-            terrain->map->data[x][y] = totalCell + totalSimp;
+            map_set(terrain->map, x, y, totalCell + totalSimp);
 
-            if ( terrain->map->data[x][y] > terrain->max ) {
-                terrain->max = terrain->map->data[x][y];
+            if ( map_get(terrain->map, x, y) > terrain->max ) {
+                terrain->max = map_get(terrain->map, x, y);
             }
 
-            if ( terrain->map->data[x][y] < terrain->min ) {
-                terrain->min = terrain->map->data[x][y];
+            if ( map_get(terrain->map, x, y) < terrain->min ) {
+                terrain->min = map_get(terrain->map, x, y);
             }
         }
     }
@@ -96,12 +96,12 @@ void terrain_calculate_bounds(terrain_t* terrain) {
 
     for ( int x = 0; x < terrain->map->width; x++ ) {
         for ( int y = 0; y < terrain->map->height; y++ ) {
-            if ( terrain->map->data[x][y] < terrain->min ) {
-                terrain->min = terrain->map->data[x][y];
+            if ( map_get(terrain->map, x, y) < terrain->min ) {
+                terrain->min = map_get(terrain->map, x, y);
             }
 
-            if ( terrain->map->data[x][y] > terrain->max ) {
-                terrain->max = terrain->map->data[x][y];
+            if ( map_get(terrain->map, x, y) > terrain->max ) {
+                terrain->max = map_get(terrain->map, x, y);
             }
         }
     }
@@ -110,7 +110,7 @@ void terrain_calculate_bounds(terrain_t* terrain) {
 void terrain_normalize(terrain_t* terrain) {
     for ( int x = 0; x < terrain->map->width; x++ ) {
         for ( int y = 0; y < terrain->map->height; y++ ) {
-            terrain->map->data[x][y] = (terrain->map->data[x][y] - terrain->min) / (terrain->max - terrain->min);
+            map_set(terrain->map, x, y, (map_get(terrain->map, x, y) - terrain->min) / (terrain->max - terrain->min));
         }
     }
 }
@@ -132,19 +132,19 @@ void terrain_draw(terrain_t* terrain, image_t* image) {
     terrain_normalize(terrain);
 
     float dif = (terrain->max - terrain->min);
-    
+
     for ( int x = 0; x < terrain->map->width; x++ ) {
         for ( int y = 0; y < terrain->map->height; y++ ) {
             color_t color;
 
-            if ( terrain->water->data[x][y] > flood ) {
-                color = lerp(water_low, water_high, (terrain->map->data[x][y] + terrain->water->data[x][y]) / dif);
+            if ( map_get(terrain->water, x, y) > flood ) {
+                color = lerp(water_low, water_high, (map_get(terrain->map, x, y) + map_get(terrain->water, x, y)) / dif);
             }
-            else if ( terrain->map->data[x][y] > mount ) {
-                color = lerp(mount_low, mount_high, (terrain->map->data[x][y]) / dif);
+            else if ( map_get(terrain->map, x, y) > mount ) {
+                color = lerp(mount_low, mount_high, (map_get(terrain->map, x, y)) / dif);
             }
             else {
-                color = lerp(land_low, land_high, (terrain->map->data[x][y]) / dif);
+                color = lerp(land_low, land_high, (map_get(terrain->map, x, y)) / dif);
             }
 
             image_set(image, x, y, color);

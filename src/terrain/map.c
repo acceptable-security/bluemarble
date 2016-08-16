@@ -12,25 +12,14 @@ map_t* map_init(unsigned int width, unsigned int height) {
     map->width = width;
     map->height = height;
 
-    map->data = (float**) malloc(sizeof(float*) * width);
+    map->data = (float*) malloc(sizeof(float*) * (width * height));
 
     if ( map->data == NULL ) {
         free(map);
         return NULL;
     }
 
-    memset(map->data, 0, sizeof(float*) * width);
-
-    for ( int x = 0; x < width; x++ ) {
-        map->data[x] = (float*) malloc(sizeof(float) * height);
-
-        if ( map->data[x] == NULL ) {
-            map_clean(map);
-            return NULL;
-        }
-
-        memset(map->data[x], 0, sizeof(float) * height);
-    }
+    memset(map->data, 0, sizeof(float*) * (width * height));
 
     return map;
 }
@@ -41,12 +30,6 @@ void map_clean(map_t* map) {
     }
 
     if ( map->data != NULL ) {
-        for ( int x = 0; x < map->width; x++ ) {
-            if ( map->data[x] != NULL ) {
-                free(map->data[x]);
-            }
-        }
-
         free(map->data);
     }
 

@@ -15,7 +15,7 @@ void terrain_char_draw(terrain_t* terrain) {
 
     for ( int y = 0; y < terrain->map->height; y++ ) {
         for ( int x = 0; x < terrain->map->width; x++ ) {
-            float val = terrain->map->data[x][y];
+            float val = map_get(terrain->map, x, y);
             printf("%c", characters[(int)(char_cnt - (val * char_cnt))]);
         }
 

@@ -7,7 +7,7 @@
 # CHANGE THESE TO FIT YOUR NEEDS
 CC = cc
 CFLAGS = -c -Wall -Isrc/ -g
-LDFLAGS = -lm
+LDFLAGS = -lm -lglfw3 -lglew -framework OpenGL
 # DONT TOUCH AFTER THIS - IT'S ALL AUTO
 
 NAME = $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
