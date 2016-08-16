@@ -3,6 +3,8 @@
 #include <limits.h>
 #include <float.h>
 
+// Simulate thermal erosion
+// Which just moves steep terrain to the lowest point.
 void terrain_thermal_erosion(terrain_t* terrain, unsigned int iterations, bool improved) {
     float talus = 4.0 / (float) terrain->map->width;
 

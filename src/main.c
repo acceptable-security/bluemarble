@@ -7,6 +7,9 @@
 #include "terrain/cellular_noise.h"
 #include "terrain/simplex_noise.h"
 #include "terrain/terrain.h"
+
+#include "renderer/renderer.h"
+
 #include "image/image.h"
 
 void terrain_char_draw(terrain_t* terrain) {
@@ -23,11 +26,7 @@ void terrain_char_draw(terrain_t* terrain) {
     }
 }
 
-int main(int argc, char* argv[]) {
-    srand(time(NULL));
-    permutations_generate();
-    grad_generate();
-
+void debug() {
     terrain_t* terrain = terrain_init(800, 600);
 
     terrain_fill_map(terrain);
@@ -42,5 +41,36 @@ int main(int argc, char* argv[]) {
     terrain_clean(terrain);
 
     printf("Done!\n");
+}
+
+void render() {
+    renderer_t* renderer = renderer_init(1024, 620);
+
+    if ( renderer != NULL ) {
+        renderer_display(renderer);
+    }
+
+    renderer_clean(renderer);
+}
+
+
+int main(int argc, char* argv[]) {
+    srand(time(NULL));
+
+    permutations_generate();
+    grad_generate();
+
+    if ( argc > 1 ) {
+        if ( strcmp(argv[1], "render") == 0 ) {
+            render();
+        }
+        else {
+            debug();
+        }
+    }
+    else {
+        debug();
+    }
+
     return 0;
 }

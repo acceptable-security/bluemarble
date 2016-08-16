@@ -4,6 +4,7 @@
 #include <float.h>
 #include "random.h"
 
+// Calculate the euclidean distance squared.
 float euclidean_squared(float x1, float y1, float x2, float y2) {
     float dif_x = x1 - x2;
     float dif_y = y1 - y2;
@@ -11,6 +12,7 @@ float euclidean_squared(float x1, float y1, float x2, float y2) {
     return (dif_x * dif_x) + (dif_y * dif_y);
 }
 
+// Calculate the cellular noise value.
 float cellular_noise(float x, float y) {
     float points[3][3][2];
 

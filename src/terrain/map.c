@@ -2,6 +2,7 @@
 #include <string.h>
 #include "map.h"
 
+// Allocate a map instance.
 map_t* map_init(unsigned int width, unsigned int height) {
     map_t* map = (map_t*) malloc(sizeof(map_t));
 
@@ -24,6 +25,7 @@ map_t* map_init(unsigned int width, unsigned int height) {
     return map;
 }
 
+// Free a map instance.
 void map_clean(map_t* map) {
     if ( map == NULL ) {
         return;

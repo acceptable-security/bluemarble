@@ -175,15 +175,3 @@ void renderer_clean(renderer_t* renderer) {
 
     free(renderer);
 }
-
-int renderer(int argc, char** argv) {
-    renderer_t* renderer = renderer_init(1024, 620);
-
-    if ( renderer != NULL ) {
-        renderer_display(renderer);
-    }
-
-    renderer_clean(renderer);
-
-    return 0;
-}

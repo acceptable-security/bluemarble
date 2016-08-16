@@ -6,6 +6,7 @@
 
 float grad[8][2];
 
+// Generate the gradients
 void grad_generate() {
     for ( int i = 0; i < 8; i++ ) {
         grad[i][0] = cos(0.785398163 * i);
@@ -13,10 +14,12 @@ void grad_generate() {
     }
 }
 
+// Do a dotproduct.
 float dot_product(int i, float x, float y) {
     return grad[i][0] * x + grad[i][1] * y;
 }
 
+// Generate the simplex noise data.
 float simplex_noise_2d(float x, float y) {
     float skew_value = (x + y) * general_skew;
     float cornerb_x = x + skew_value;

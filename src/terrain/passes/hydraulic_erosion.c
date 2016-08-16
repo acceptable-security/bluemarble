@@ -2,6 +2,8 @@
 #include <limits.h>
 #include <float.h>
 
+// Distribute an equal ammount of rain onto the land
+// and have the terrain absorb a little bit of the rain.
 void terrain_rain(terrain_t* terrain) {
     for ( int x = 0; x < terrain->water->width; x++ ) {
         for ( int y = 0; y < terrain->water->height; y++ ) {
@@ -11,6 +13,7 @@ void terrain_rain(terrain_t* terrain) {
     }
 }
 
+// Have the water evaporate
 void terrain_evaporate_water(terrain_t* terrain) {
     for ( int x = 0; x < terrain->map->width; x++ ) {
         for ( int y = 0; y < terrain->map->height; y++ ) {
@@ -24,6 +27,7 @@ void terrain_evaporate_water(terrain_t* terrain) {
     }
 }
 
+// Simulate the movement of water over thet terrain.
 void terrain_simulate_water(terrain_t* terrain) {
     for ( int x = 1; x < terrain->water->width - 1; x++ ) {
         for ( int y = 1; y < terrain->water->height - 1; y++ ) {
@@ -32,6 +36,7 @@ void terrain_simulate_water(terrain_t* terrain) {
             int lowest_x = 0;
             int lowest_y = 0;
 
+            // Find the lowest point to move to
             for ( int i = -1; i < 2; i++ ) {
                 for ( int j = -1; j < 2; j++ ) {
                     float current_difference = current_height - map_get(terrain->map, x + i, y + j) - map_get(terrain->water, x + i, y + j);
@@ -45,7 +50,9 @@ void terrain_simulate_water(terrain_t* terrain) {
                 }
             }
 
+            // If there is a point lower than us
             if ( max_dif > 0 ) {
+                // Go to the lowest point or distribute half and half if it is same levle.
                 if ( map_get(terrain->water, x, y) < max_dif ) {
                     map_set(terrain->water, x + lowest_x, y + lowest_y, map_get(terrain->water, x + lowest_x, y + lowest_y) + map_get(terrain->water, x, y));
                     map_set(terrain->water, x, y, 0);
@@ -59,6 +66,7 @@ void terrain_simulate_water(terrain_t* terrain) {
     }
 }
 
+// Do rain/simulate/evaporate for several iterations.
 void terrain_hydraulic_erosion(terrain_t* terrain, unsigned int iterations) {
     for ( int iter_count = 0; iter_count < iterations; iter_count++ ) {
         terrain_rain(terrain);
