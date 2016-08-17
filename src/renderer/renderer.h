@@ -20,9 +20,13 @@ typedef struct {
     GLuint vao;
     GLuint vbo;
     GLuint ibo;
+
+    GLuint shaderProgram;
 } renderer_t;
 
 renderer_t* renderer_init(const int width, const int height);
+char* renderer_read_file(const char* path);
+void renderer_compile_shader(renderer_t* renderer, const char* vertexShaderPath, const char* fragmentShaderPath);
 void renderer_keyboard_event(GLFWwindow* window, int key, int scancode, int action, int mods);
 void renderer_generate_terrain(renderer_t* renderer, unsigned int width, unsigned int height);
 void renderer_generate_vertices(renderer_t* renderer);

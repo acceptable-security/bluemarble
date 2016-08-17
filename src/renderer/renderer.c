@@ -15,7 +15,7 @@ renderer_t* renderer_init(int width, int height) {
     }
 
     if ( !glfwInit() ) {
-        fprintf(stderr, "Failed to initialize GLFW\n");
+        fprintf(stderr, "Failed to initialize GLFW.\n");
         return NULL;
     }
 
@@ -52,7 +52,7 @@ renderer_t* renderer_init(int width, int height) {
         free(renderer);
         glfwTerminate();
 
-        fprintf(stderr, "Failed to initialize GLEW");
+        fprintf(stderr, "Failed to initialize GLEW.\n");
         return NULL;
     }
 
@@ -70,7 +70,136 @@ renderer_t* renderer_init(int width, int height) {
     glDisable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
+    // Generate shaders
+    renderer_compile_shader(renderer, "./src/renderer/vertexShader.glsl", "./src/renderer/fragmentShader.glsl");
+
     return renderer;
+}
+
+char* renderer_read_file(const char* path) {
+    FILE* file = fopen(path, "r");
+
+    if ( file == NULL ) {
+        fprintf(stderr, "Failed to open the file `%s`.\n", path);
+        return NULL;
+    }
+
+    if ( fseek(file, 0, SEEK_END) != 0 ) {
+        fprintf(stderr, "Failed to calculate the end of the file `%s`.\n", path);
+        fclose(file);
+        return NULL;
+    }
+
+    long size = ftell(file);
+
+    if ( size == -1 ) {
+        fprintf(stderr, "Failed to get the size of the file `%s`.\n", path);
+        fclose(file);
+        return NULL;
+    }
+
+    char* buffer = malloc(sizeof(char) * (size + 1));
+
+    if ( buffer == NULL ) {
+        fprintf(stderr, "Failed to allocate space in heap for file `%s`.\n", path);
+        fclose(file);
+        return NULL;
+    }
+
+    if ( fseek(file, 0, SEEK_SET) != 0 ) {
+        fprintf(stderr, "Failed to return to the beginning of file `%s`.\n", path);
+        fclose(file);
+        free(buffer);
+        return NULL;
+    }
+
+    unsigned long readLen = fread(buffer, sizeof(char), size,file);
+
+    if ( ferror(file) != 0 ) {
+        fprintf(stderr, "Failed to read from file `%s`.\n", path);
+        fclose(file);
+        free(buffer);
+        return NULL;
+    }
+
+    buffer[readLen++] = '\0';
+
+    fclose(file);
+
+    return buffer;
+}
+
+void renderer_compile_shader(renderer_t* renderer, const char* vertexShaderPath, const char* fragmentShaderPath) {
+    char* vertexShaderBuffer = renderer_read_file(vertexShaderPath);
+
+    if ( vertexShaderBuffer == NULL ) {
+        return;
+    }
+
+    char* fragmentShaderBuffer = renderer_read_file(fragmentShaderPath);
+
+    if ( fragmentShaderBuffer == NULL ) {
+        free(vertexShaderBuffer);
+        return;
+    }
+
+    GLint compileSuccess;
+
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, (const char**)&vertexShaderBuffer, NULL);
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compileSuccess);
+
+    if ( !compileSuccess ) {
+        GLchar compileInfo[512];
+        glGetShaderInfoLog(vertexShader, 512, NULL, compileInfo);
+        fprintf(stderr, "Failed to compile the vertex shader: %s\n",compileInfo);
+
+        free(fragmentShaderBuffer);
+        free(vertexShaderBuffer);
+
+        return;
+    }
+
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, (const char**)&fragmentShaderBuffer, NULL);
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compileSuccess);
+
+    if ( !compileSuccess ) {
+        GLchar compileInfo[512];
+        glGetShaderInfoLog(fragmentShader, 512, NULL, compileInfo);
+        fprintf(stderr, "Failed to compile the fragment shader: %s\n", compileInfo);
+
+        free(fragmentShaderBuffer);
+        free(fragmentShaderBuffer);
+
+        return;
+    }
+
+    free(fragmentShaderBuffer);
+    free(fragmentShaderBuffer);
+
+    renderer->shaderProgram = glCreateProgram();
+    glAttachShader(renderer->shaderProgram, vertexShader);
+    glAttachShader(renderer->shaderProgram, fragmentShader);
+    glLinkProgram(renderer->shaderProgram);
+
+    glGetProgramiv(renderer->shaderProgram, GL_LINK_STATUS, &compileSuccess);
+
+    if ( !compileSuccess ) {
+        GLchar compileInfo[512];
+        glGetShaderInfoLog(fragmentShader, 512, NULL, compileInfo);
+        fprintf(stderr, "Failed to compile the shader program: %s\n", compileInfo);
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+
+        return;
+    }
+
+    glUseProgram(renderer->shaderProgram);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 }
 
 void renderer_keyboard_event(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -99,7 +228,19 @@ void renderer_generate_vertices(renderer_t* renderer) {
     unsigned int height = renderer->terrain->map->height;
 
     renderer->colors = (float*) malloc(sizeof(float) * (width * height * 3));
+
+    if ( renderer->colors == NULL ) {
+        fprintf(stderr, "Failed to allocate enough space for the vertices.\n");
+        return;
+    }
+
     renderer->indices = (unsigned short*) malloc(sizeof(unsigned short) * (width * height * 4));
+
+    if ( renderer->indices == NULL ) {
+        free(renderer->colors);
+        fprintf(stderr, "Failed to allocate enough space for the colors.\n");
+        return;
+    }
 
     for ( int x = 0; x < width - 1; x++ ) {
         for ( int y = 0; y < height - 1; y++ ) {
@@ -111,15 +252,19 @@ void renderer_generate_vertices(renderer_t* renderer) {
     }
 
     glGenVertexArrays(1, &renderer->vao);
-    glBindVertexArray(renderer->vao);
-
     glGenBuffers(1, &renderer->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height, renderer->terrain->map->data, GL_STATIC_DRAW);
-
     glGenBuffers(1, &renderer->ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (width * height * 4), renderer->indices, GL_STATIC_DRAW);
+
+    glBindVertexArray(renderer->vao);
+        glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height, renderer->terrain->map->data, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (width * height * 4), renderer->indices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+        glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 }
 
 void renderer_render_terrain(renderer_t* renderer) {
