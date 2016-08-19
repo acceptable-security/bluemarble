@@ -323,12 +323,11 @@ void renderer_render_terrain(renderer_t* renderer) {
     glUseProgram(renderer->shaderProgram);
 
     glBindVertexArray(renderer->vao);
-        glDrawElements(GL_QUADS, (width * height * 4), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_QUADS, (width * height ), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
 void renderer_render(renderer_t* renderer) {
-    // Draw stuff
     glClearColor(0.21875, 0.6875, 0.8671, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -338,7 +337,10 @@ void renderer_render(renderer_t* renderer) {
 
     glMatrixMode(GL_MODELVIEW_MATRIX);
 
-    glTranslatef(1.0f, 1.0f, 1.0f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    gluLookAt(10, 10, 10,  // Camera pos
+              0,  0,  0,  // Center pos
+              0,  1,  0);
     renderer_render_terrain(renderer);
 }
 
