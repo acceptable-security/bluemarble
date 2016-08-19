@@ -334,13 +334,12 @@ void renderer_render(renderer_t* renderer) {
     glMatrixMode(GL_PROJECTION_MATRIX);
     glLoadIdentity();
     gluPerspective(60, (double)renderer->width / (double)renderer->height, 0.1, 100);
-
-    glMatrixMode(GL_MODELVIEW_MATRIX);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     gluLookAt(11, 11, 11,  // Camera pos
               0,  0,  0,  // Center pos
               0,  1,  0);
+
+    glMatrixMode(GL_MODELVIEW_MATRIX);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     renderer_render_terrain(renderer);
 }
