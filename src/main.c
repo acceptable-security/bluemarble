@@ -47,7 +47,7 @@ void render() {
     renderer_t* renderer = renderer_init(1024, 620);
 
     if ( renderer != NULL ) {
-        renderer_generate_terrain(renderer, 50, 50);
+        renderer_generate_terrain(renderer, 5, 5);
         renderer_generate_vertices(renderer);
         renderer_display(renderer);
         renderer_clean(renderer);

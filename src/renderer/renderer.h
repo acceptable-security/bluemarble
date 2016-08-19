@@ -17,6 +17,7 @@ typedef struct {
     terrain_t* terrain;
 
     float* colors;
+    float* vertices;
     unsigned short* indices;
 
     GLuint vao;

@@ -70,8 +70,6 @@ renderer_t* renderer_init(int width, int height) {
     glDisable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
     // Generate shaders
      if ( !renderer_compile_shader(renderer, "./src/renderer/vertexShader.glsl",
                                              "./src/renderer/fragmentShader.glsl") ) {
@@ -247,6 +245,8 @@ void renderer_generate_terrain(renderer_t* renderer, unsigned int width, unsigne
     terrain_fill_map(renderer->terrain);
     terrain_hydraulic_erosion(renderer->terrain, 200);
     terrain_thermal_erosion(renderer->terrain, 50, true);
+    terrain_calculate_bounds(renderer->terrain);
+    terrain_normalize(renderer->terrain);
 }
 
 void renderer_generate_vertices(renderer_t* renderer) {
@@ -264,16 +264,37 @@ void renderer_generate_vertices(renderer_t* renderer) {
 
     if ( renderer->indices == NULL ) {
         free(renderer->colors);
-        fprintf(stderr, "Failed to allocate enough space for the colors.\n");
+        fprintf(stderr, "Failed to allocate enough space for the indices.\n");
         return;
     }
 
-    for ( int x = 0; x < width - 1; x++ ) {
-        for ( int y = 0; y < height - 1; y++ ) {
+    renderer->vertices = (float*) malloc(sizeof(float) * (width * height * 3));
+
+    if ( renderer->vertices == NULL ) {
+        free(renderer->colors);
+        free(renderer->indices);
+        fprintf(stderr, "Failed to allocate enough space for the vertices.\n");
+        return;
+    }
+
+    for ( int y = 0; y < height; y++ ) {
+        for ( int x = 0; x < width; x++ ) {
+            renderer->vertices[3 * ((y * width) + x) + 0] = (float) x;
+            renderer->vertices[3 * ((y * width) + x) + 1] = (float) y;
+            renderer->vertices[3 * ((y * width) + x) + 2] = renderer->terrain->map->data[((y * width) + x)];
+
+            printf("Vertex[%d]: (%f, %f, %f)\n", ((y * width) + x), (float) x, (float) y, renderer->terrain->map->data[((y * width) + x)]);
+        }
+    }
+
+    for ( int y = 0; y < height - 1; y++ ) {
+        for ( int x = 0; x < width - 1; x++ ) {
             renderer->indices[4 * ((y * width) + x) + 0] = (y * width) + x;
             renderer->indices[4 * ((y * width) + x) + 1] = (y * width) + (x + 1);
             renderer->indices[4 * ((y * width) + x) + 2] = ((y + 1) * width) + (x + 1);
             renderer->indices[4 * ((y * width) + x) + 3] = ((y + 1) * width) + x;
+
+            printf("QUAD: %d %d %d %d\n", (y * width) + x, (y * width) + (x + 1), ((y + 1) * width) + (x + 1), ((y + 1) * width) + x);
         }
     }
 
@@ -283,12 +304,14 @@ void renderer_generate_vertices(renderer_t* renderer) {
 
     glBindVertexArray(renderer->vao);
         glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height, renderer->terrain->map->data, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height * 3, renderer->vertices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (width * height * 4), renderer->indices, GL_STATIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (width * height * 4), renderer->indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
         glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 }
@@ -298,8 +321,9 @@ void renderer_render_terrain(renderer_t* renderer) {
     unsigned int height = renderer->terrain->map->height;
 
     glUseProgram(renderer->shaderProgram);
+
     glBindVertexArray(renderer->vao);
-    glDrawElements(GL_QUADS, (width * height * 4), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_QUADS, (width * height * 4), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
@@ -313,8 +337,8 @@ void renderer_render(renderer_t* renderer) {
     gluPerspective(60, (double)renderer->width / (double)renderer->height, 0.1, 100);
 
     glMatrixMode(GL_MODELVIEW_MATRIX);
-    glTranslatef(0,0,-5);
 
+    glTranslatef(1.0f, 1.0f, 1.0f);
     renderer_render_terrain(renderer);
 }
 
@@ -348,6 +372,10 @@ void renderer_clean(renderer_t* renderer) {
 
     if ( renderer->indices != NULL ) {
         free(renderer->indices);
+    }
+
+    if ( renderer->vertices != NULL ) {
+        free(renderer->vertices);
     }
 
     free(renderer);
