@@ -18,7 +18,7 @@ typedef struct {
 
     float* colors;
     float* vertices;
-    unsigned short* indices;
+    unsigned int* indices;
 
     GLuint vao;
     GLuint vbo;
