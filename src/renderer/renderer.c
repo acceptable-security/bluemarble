@@ -70,8 +70,18 @@ renderer_t* renderer_init(int width, int height) {
     glDisable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+
     // Generate shaders
-    renderer_compile_shader(renderer, "./src/renderer/vertexShader.glsl", "./src/renderer/fragmentShader.glsl");
+     if ( !renderer_compile_shader(renderer, "./src/renderer/vertexShader.glsl",
+                                             "./src/renderer/fragmentShader.glsl") ) {
+         fprintf(stderr, "Failed to initialize the renderer shaders.\n");
+
+         free(renderer);
+         glfwTerminate();
+
+         return NULL;
+     }
 
     return renderer;
 }
@@ -129,53 +139,63 @@ char* renderer_read_file(const char* path) {
     return buffer;
 }
 
-void renderer_compile_shader(renderer_t* renderer, const char* vertexShaderPath, const char* fragmentShaderPath) {
+bool renderer_compile_shader(renderer_t* renderer, const char* vertexShaderPath, const char* fragmentShaderPath) {
     char* vertexShaderBuffer = renderer_read_file(vertexShaderPath);
 
     if ( vertexShaderBuffer == NULL ) {
-        return;
+        return false;
     }
 
     char* fragmentShaderBuffer = renderer_read_file(fragmentShaderPath);
 
     if ( fragmentShaderBuffer == NULL ) {
         free(vertexShaderBuffer);
-        return;
+        return false;
     }
 
     GLint compileSuccess;
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, (const char**)&vertexShaderBuffer, NULL);
+    glCompileShader(vertexShader);
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &compileSuccess);
 
-    if ( !compileSuccess ) {
-        GLchar compileInfo[512];
-        glGetShaderInfoLog(vertexShader, 512, NULL, compileInfo);
-        fprintf(stderr, "Failed to compile the vertex shader: %s\n",compileInfo);
+    if ( compileSuccess != GL_TRUE ) {
+        GLint infoLogLength;
+        glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+        GLchar compileInfo[infoLogLength];
+
+        glGetShaderInfoLog(vertexShader, infoLogLength, NULL, compileInfo);
+        fprintf(stderr, "Failed to compile the vertex shader[%d]: `%s`\n", compileSuccess, compileInfo);
 
         free(fragmentShaderBuffer);
         free(vertexShaderBuffer);
 
-        return;
+        return false;
     }
 
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, (const char**)&fragmentShaderBuffer, NULL);
+    glCompileShader(fragmentShader);
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &compileSuccess);
 
-    if ( !compileSuccess ) {
-        GLchar compileInfo[512];
-        glGetShaderInfoLog(fragmentShader, 512, NULL, compileInfo);
-        fprintf(stderr, "Failed to compile the fragment shader: %s\n", compileInfo);
+    if ( compileSuccess != GL_TRUE ) {
+        GLint infoLogLength;
+        glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        free(fragmentShaderBuffer);
+        GLchar compileInfo[infoLogLength];
+
+        glGetShaderInfoLog(fragmentShader, infoLogLength, NULL, compileInfo);
+        fprintf(stderr, "Failed to compile the fragment shader[%d]: %s\n", compileSuccess, compileInfo);
+
+        free(vertexShaderBuffer);
         free(fragmentShaderBuffer);
 
-        return;
+        return false;
     }
 
-    free(fragmentShaderBuffer);
+    free(vertexShaderBuffer);
     free(fragmentShaderBuffer);
 
     renderer->shaderProgram = glCreateProgram();
@@ -185,21 +205,27 @@ void renderer_compile_shader(renderer_t* renderer, const char* vertexShaderPath,
 
     glGetProgramiv(renderer->shaderProgram, GL_LINK_STATUS, &compileSuccess);
 
-    if ( !compileSuccess ) {
-        GLchar compileInfo[512];
-        glGetShaderInfoLog(fragmentShader, 512, NULL, compileInfo);
-        fprintf(stderr, "Failed to compile the shader program: %s\n", compileInfo);
+    if ( compileSuccess != GL_TRUE ) {
+        GLint infoLogLength;
+        glGetShaderiv(renderer->shaderProgram, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+        GLchar compileInfo[infoLogLength];
+
+        glGetShaderInfoLog(renderer->shaderProgram, infoLogLength, NULL, compileInfo);
+        fprintf(stderr, "Failed to compile the shader program[%d]: %s\n", compileSuccess, compileInfo);
 
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
 
-        return;
+        return false;
     }
 
     glUseProgram(renderer->shaderProgram);
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    return true;
 }
 
 void renderer_keyboard_event(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -262,18 +288,24 @@ void renderer_generate_vertices(renderer_t* renderer) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (width * height * 4), renderer->indices, GL_STATIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
         glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 }
 
 void renderer_render_terrain(renderer_t* renderer) {
+    unsigned int width = renderer->terrain->map->width;
+    unsigned int height = renderer->terrain->map->height;
 
+    glUseProgram(renderer->shaderProgram);
+    glBindVertexArray(renderer->vao);
+    glDrawElements(GL_QUADS, (width * height * 4), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
 }
 
 void renderer_render(renderer_t* renderer) {
     // Draw stuff
-    glClearColor(0.0, 0.8, 0.3, 1.0);
+    glClearColor(0.21875, 0.6875, 0.8671, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION_MATRIX);
