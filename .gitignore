@@ -1,3 +1,4 @@
 build/
 test.bmp
 .DS_STORE
+.gdb_history
