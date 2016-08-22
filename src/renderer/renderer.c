@@ -65,10 +65,10 @@ renderer_t* renderer_init(int width, int height) {
     printf("OpenGL version supported %s\n", glGetString(GL_VERSION));
 
     // Depth Testing
-    // glEnable(GL_DEPTH_TEST);
-    // glDepthFunc(GL_LEQUAL);
-    // glDisable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDisable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     // Generate shaders
      if ( !renderer_compile_shader(renderer, "./src/renderer/vertexShader.glsl",
@@ -260,7 +260,7 @@ void renderer_generate_vertices(renderer_t* renderer) {
         return;
     }
 
-    renderer->indices = (unsigned int*) malloc(sizeof(unsigned int) * (width * height * 4));
+    renderer->indices = (unsigned int*) malloc(sizeof(unsigned int) * ((width - 1) * (height - 1) * 4));
 
     if ( renderer->indices == NULL ) {
         free(renderer->colors);
@@ -282,19 +282,15 @@ void renderer_generate_vertices(renderer_t* renderer) {
             renderer->vertices[3 * ((y * width) + x) + 0] = (float) x;
             renderer->vertices[3 * ((y * width) + x) + 1] = (float) y;
             renderer->vertices[3 * ((y * width) + x) + 2] = renderer->terrain->map->data[((y * width) + x)] * 10;
-
-            printf("Vertex[%d]: (%f, %f, %f)\n", ((y * width) + x), (float) x, (float) y, renderer->terrain->map->data[((y * width) + x)] * 10);
         }
     }
 
     for ( int y = 0; y < height - 1; y++ ) {
         for ( int x = 0; x < width - 1; x++ ) {
-            renderer->indices[4 * ((y * width) + x) + 0] = (y * width) + x;
-            renderer->indices[4 * ((y * width) + x) + 1] = (y * width) + (x + 1);
-            renderer->indices[4 * ((y * width) + x) + 2] = ((y + 1) * width) + (x + 1);
-            renderer->indices[4 * ((y * width) + x) + 3] = ((y + 1) * width) + x;
-
-            printf("QUAD: %d %d %d %d\n", (y * width) + x, (y * width) + (x + 1), ((y + 1) * width) + (x + 1), ((y + 1) * width) + x);
+            renderer->indices[4 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;
+            renderer->indices[4 * (y * ((width - 1)) + x) + 1] = (y * (width)) + (x + 1);
+            renderer->indices[4 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);
+            renderer->indices[4 * (y * ((width - 1)) + x) + 3] = ((y + 1) * (width)) + x;
         }
     }
 
@@ -305,11 +301,11 @@ void renderer_generate_vertices(renderer_t* renderer) {
     glBindVertexArray(renderer->vao);
         glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height * 3, renderer->vertices, GL_STATIC_DRAW);
-        // glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * width * height * 4, renderer->indices, GL_STATIC_DRAW);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * (width - 1) * (height - 1) * 4, renderer->indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
         glEnableVertexAttribArray(0);
@@ -334,13 +330,12 @@ void renderer_render(renderer_t* renderer) {
     glMatrixMode(GL_PROJECTION_MATRIX);
     glLoadIdentity();
     gluPerspective(60, (double)renderer->width / (double)renderer->height, 0.1, 100);
-    gluLookAt(11, 11, 11,  // Camera pos
-              0,  0,  0,  // Center pos
-              0,  1,  0);
 
     glMatrixMode(GL_MODELVIEW_MATRIX);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+    gluLookAt(11, 11, 11,  // Camera pos
+              0,  0,  0,  // Center pos
+              0,  1,  0);
     renderer_render_terrain(renderer);
 }
 
