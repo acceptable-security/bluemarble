@@ -329,7 +329,7 @@ void renderer_render(renderer_t* renderer) {
     glClearColor(0.21875, 0.6875, 0.8671, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    gluLookAt(11, 11, 11,  // Camera pos
+    gluLookAt(-11, -11, -11,  // Camera pos
               0,  0,  0,  // Center pos
               0,  1,  0);
     renderer_render_terrain(renderer);
@@ -337,11 +337,11 @@ void renderer_render(renderer_t* renderer) {
 }
 
 void renderer_display(renderer_t* renderer) {
-    // glMatrixMode(GL_PROJECTION_MATRIX);
+    glMatrixMode(GL_PROJECTION_MATRIX);
     // glLoadIdentity();
     gluPerspective(90, (double)renderer->width / (double)renderer->height, 0.001, 100);
     //
-    // glMatrixMode(GL_MODELVIEW_MATRIX);
+    glMatrixMode(GL_MODELVIEW_MATRIX);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     while ( !glfwWindowShouldClose(renderer->window) ) {
