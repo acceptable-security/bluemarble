@@ -329,7 +329,7 @@ void renderer_render(renderer_t* renderer) {
     glClearColor(0.21875, 0.6875, 0.8671, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    gluLookAt(-11, -11, -11,  // Camera pos
+    gluLookAt(11, 11, 11,  // Camera pos
               0,  0,  0,  // Center pos
               0,  1,  0);
     renderer_render_terrain(renderer);
