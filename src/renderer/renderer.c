@@ -303,6 +303,9 @@ void renderer_generate_vertices(renderer_t* renderer) {
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height * 3, renderer->vertices, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+        printf("Sending %lu bytes to the GPU for indices for %d indices for %d quads\n", sizeof(unsigned int) * (width - 1) * (height - 1) * 4, (width - 1) * (height - 1) * 4, (width - 1) * (height - 1));
+
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * (width - 1) * (height - 1) * 4, renderer->indices, GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
