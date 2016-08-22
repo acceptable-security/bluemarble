@@ -260,7 +260,7 @@ void renderer_generate_vertices(renderer_t* renderer) {
         return;
     }
 
-    renderer->indices = (unsigned int*) malloc(sizeof(unsigned int) * ((width - 1) * (height - 1) * 4));
+    renderer->indices = (unsigned int*) malloc(sizeof(unsigned int) * ((width - 1) * (height - 1) * 6));
 
     if ( renderer->indices == NULL ) {
         free(renderer->colors);
@@ -287,10 +287,12 @@ void renderer_generate_vertices(renderer_t* renderer) {
 
     for ( int y = 0; y < height - 1; y++ ) {
         for ( int x = 0; x < width - 1; x++ ) {
-            renderer->indices[4 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;
-            renderer->indices[4 * (y * ((width - 1)) + x) + 1] = (y * (width)) + (x + 1);
-            renderer->indices[4 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);
-            renderer->indices[4 * (y * ((width - 1)) + x) + 3] = ((y + 1) * (width)) + x;
+            renderer->indices[6 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;                 // TOP LEFT         * - *
+            renderer->indices[6 * (y * ((width - 1)) + x) + 1] = (y * (width)) + (x + 1);           // TOP RIGHT          \ |
+            renderer->indices[6 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);     // BOTTOM RIGHT         *
+            renderer->indices[6 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;                 // TOP LEFT         *
+            renderer->indices[6 * (y * ((width - 1)) + x) + 3] = ((y + 1) * (width)) + x;           // BOTTOM LEFT      |  
+            renderer->indices[6 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);     // BOTTOM RIGHT     * - *
         }
     }
 
@@ -303,11 +305,8 @@ void renderer_generate_vertices(renderer_t* renderer) {
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height * 3, renderer->vertices, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        printf("Sending %lu bytes to the GPU for indices for %d indices for %d quads\n", sizeof(unsigned int) * (width - 1) * (height - 1) * 4, (width - 1) * (height - 1) * 4, (width - 1) * (height - 1));
-
-
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * (width - 1) * (height - 1) * 4, renderer->indices, GL_STATIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * (width - 1) * (height - 1) * 6, renderer->indices, GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
@@ -322,7 +321,7 @@ void renderer_render_terrain(renderer_t* renderer) {
     glUseProgram(renderer->shaderProgram);
 
     glBindVertexArray(renderer->vao);
-        glDrawElements(GL_QUADS, ((width - 1) * (height - 1) * 4), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, ((width - 1) * (height - 1) * 6), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
