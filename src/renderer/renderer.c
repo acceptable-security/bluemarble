@@ -319,7 +319,7 @@ void renderer_render_terrain(renderer_t* renderer) {
     glUseProgram(renderer->shaderProgram);
 
     glBindVertexArray(renderer->vao);
-        glDrawElements(GL_QUADS, (width * height * 4), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_QUADS, ((width - 1) * (height - 1) * 4), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 
