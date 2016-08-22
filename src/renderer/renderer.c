@@ -291,7 +291,7 @@ void renderer_generate_vertices(renderer_t* renderer) {
             renderer->indices[6 * (y * ((width - 1)) + x) + 1] = (y * (width)) + (x + 1);           // TOP RIGHT          \ |
             renderer->indices[6 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);     // BOTTOM RIGHT         *
             renderer->indices[6 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;                 // TOP LEFT         *
-            renderer->indices[6 * (y * ((width - 1)) + x) + 3] = ((y + 1) * (width)) + x;           // BOTTOM LEFT      |  
+            renderer->indices[6 * (y * ((width - 1)) + x) + 3] = ((y + 1) * (width)) + x;           // BOTTOM LEFT      |
             renderer->indices[6 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);     // BOTTOM RIGHT     * - *
         }
     }
@@ -329,19 +329,21 @@ void renderer_render(renderer_t* renderer) {
     glClearColor(0.21875, 0.6875, 0.8671, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glMatrixMode(GL_PROJECTION_MATRIX);
-    glLoadIdentity();
-    gluPerspective(60, (double)renderer->width / (double)renderer->height, 0.1, 100);
-
-    glMatrixMode(GL_MODELVIEW_MATRIX);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     gluLookAt(11, 11, 11,  // Camera pos
               0,  0,  0,  // Center pos
               0,  1,  0);
     renderer_render_terrain(renderer);
+
 }
 
 void renderer_display(renderer_t* renderer) {
+    // glMatrixMode(GL_PROJECTION_MATRIX);
+    // glLoadIdentity();
+    gluPerspective(90, (double)renderer->width / (double)renderer->height, 0.001, 100);
+    //
+    // glMatrixMode(GL_MODELVIEW_MATRIX);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
     while ( !glfwWindowShouldClose(renderer->window) ) {
         // Check for any input, or window movement
         glfwPollEvents();
@@ -359,6 +361,9 @@ void renderer_clean(renderer_t* renderer) {
     }
 
     if ( renderer->window != NULL ) {
+        glDeleteVertexArrays(1, &renderer->vao);
+        glDeleteBuffers(1, &renderer->vbo);
+        glDeleteBuffers(1, &renderer->ibo);
         glfwDestroyWindow(renderer->window);
         glfwTerminate();
     }
