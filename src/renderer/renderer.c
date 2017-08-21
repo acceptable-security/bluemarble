@@ -20,7 +20,7 @@ renderer_t* renderer_init(int width, int height) {
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
@@ -67,8 +67,8 @@ renderer_t* renderer_init(int width, int height) {
     // Depth Testing
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glDisable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    // glDisable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
 
     // Generate shaders
      if ( !renderer_compile_shader(renderer, "./src/renderer/vertexShader.glsl",
@@ -279,38 +279,48 @@ void renderer_generate_vertices(renderer_t* renderer) {
 
     for ( int y = 0; y < height; y++ ) {
         for ( int x = 0; x < width; x++ ) {
-            renderer->vertices[3 * ((y * width) + x) + 0] = (float) x;
-            renderer->vertices[3 * ((y * width) + x) + 1] = (float) y;
-            renderer->vertices[3 * ((y * width) + x) + 2] = renderer->terrain->map->data[((y * width) + x)] * 10;
+            int off = 3 * ((y * width) + x);
+            renderer->vertices[off + 0] = (float) x;
+            renderer->vertices[off + 1] = (float) renderer->terrain->map->data[(y * width) + x];
+            renderer->vertices[off + 2] = (float) y;
         }
     }
 
     for ( int y = 0; y < height - 1; y++ ) {
         for ( int x = 0; x < width - 1; x++ ) {
-            renderer->indices[6 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;                 // TOP LEFT         * - *
-            renderer->indices[6 * (y * ((width - 1)) + x) + 1] = (y * (width)) + (x + 1);           // TOP RIGHT          \ |
-            renderer->indices[6 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);     // BOTTOM RIGHT         *
-            renderer->indices[6 * (y * ((width - 1)) + x) + 0] = (y * (width)) + x;                 // TOP LEFT         *
-            renderer->indices[6 * (y * ((width - 1)) + x) + 3] = ((y + 1) * (width)) + x;           // BOTTOM LEFT      |
-            renderer->indices[6 * (y * ((width - 1)) + x) + 2] = ((y + 1) * (width)) + (x + 1);     // BOTTOM RIGHT     * - *
+            int off = 6 * ((y * (width - 1)) + x);
+            renderer->indices[off + 0] = (y * width) + x;                 // TOP LEFT         * - *
+            renderer->indices[off + 1] = (y * width) + (x + 1);           // TOP RIGHT          \ |
+            renderer->indices[off + 2] = ((y + 1) * width) + (x + 1);     // BOTTOM RIGHT         *
+
+            renderer->indices[off + 3] = (y * width) + x;                 // TOP LEFT         *
+            renderer->indices[off + 4] = ((y + 1) * width) + x;           // BOTTOM LEFT      | \ :^)
+            renderer->indices[off + 5] = ((y + 1) * width) + (x + 1);     // BOTTOM RIGHT     * - *
         }
+    }
+
+    for ( int i = 0; i < (width - 1) * (height - 1) * 6; i++ ) {
+        printf("Vertex %d: [%d] (%f, %f, %f)\n", i, renderer->indices[i],
+                                                    renderer->vertices[renderer->indices[i] * 3 + 0],
+                                                    renderer->vertices[renderer->indices[i] * 3 + 1],
+                                                    renderer->vertices[renderer->indices[i] * 3 + 2]
+              );
     }
 
     glGenVertexArrays(1, &renderer->vao);
     glGenBuffers(1, &renderer->vbo);
     glGenBuffers(1, &renderer->ibo);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * (width - 1) * (height - 1) * 6, renderer->indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
     glBindVertexArray(renderer->vao);
         glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * width * height * 3, renderer->vertices, GL_STATIC_DRAW);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*) 0);
+            glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * (width - 1) * (height - 1) * 6, renderer->indices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-        glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 }
 
@@ -321,28 +331,25 @@ void renderer_render_terrain(renderer_t* renderer) {
     glUseProgram(renderer->shaderProgram);
 
     glBindVertexArray(renderer->vao);
-        glDrawElements(GL_TRIANGLES, ((width - 1) * (height - 1) * 6), GL_UNSIGNED_INT, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
+            glDrawElements(GL_TRIANGLES, ((width - 1) * (height - 1) * 6), GL_UNSIGNED_INT, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
 void renderer_render(renderer_t* renderer) {
     glClearColor(0.21875, 0.6875, 0.8671, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    gluLookAt(11, 11, 11,  // Camera pos
-              0,  0,  0,  // Center pos
-              0,  1,  0);
     renderer_render_terrain(renderer);
-
 }
 
 void renderer_display(renderer_t* renderer) {
     glMatrixMode(GL_PROJECTION_MATRIX);
-    // glLoadIdentity();
-    gluPerspective(90, (double)renderer->width / (double)renderer->height, 0.001, 100);
-    //
+    glLoadIdentity();
+    gluPerspective(100, (double)renderer->width / (double)renderer->height, 0.01, 1000);
+
     glMatrixMode(GL_MODELVIEW_MATRIX);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_TRIANGLES);
 
     while ( !glfwWindowShouldClose(renderer->window) ) {
         // Check for any input, or window movement
