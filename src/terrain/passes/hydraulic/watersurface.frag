@@ -3,7 +3,7 @@
  */
 #version 150 core
 
-in vec4 our_coord; // input coord (land, water, sediment, unused)
+in vec4 our_coord; // input coord (land, water, sediment, avg B)
 in vec2 pos; // (x, y)
 in float dt; // Time delta
 
@@ -40,4 +40,5 @@ void main() {
     // Calculate new water height
     height_coord = our_coord;
     height_coord.y += (net_volume) / (dX * dY);
+    height_coord.w = (height_coord.y - our_coord.y) / 2;
 }

@@ -7,8 +7,7 @@ in vec4 our_vector; // (u, v, unused, unused)
 in vec2 pos;
 
 uniform sampler2D flux_map;
-uniform sampler2D old_coord; // Map at beginning of iteration (land, water, sediment, unused)
-uniform sampler2D new_coord; // Map at end of iteration (land, water, sediment, unused)
+uniform sampler2D height_map; // Map at end of iteration (land, water, sediment, avg B)
 const float dX = 1; // Distance between two grid points
 const float dY = 1; // ^^
 
@@ -28,8 +27,7 @@ void main() {
     float our_bottom_flux = texture2D(flux_map, pos).w;
 
     // Calculate the average water height
-    float avg_water_height = (texture2D(old_coord, pos).y +
-                              texture2D(new_coord, pos).y) / 2.0;
+    float avg_water_height = texture2D(height_map, pos).w;
 
     // Calculate amount of water moving through X/Y pipes
     float avg_water_x = (left_flux - our_left_flux + our_right_flux - right_flux) / 2;
