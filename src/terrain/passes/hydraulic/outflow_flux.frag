@@ -27,9 +27,7 @@ vec4 get_delta(vec2 pos, float our_height) {
     if ( pos.x > 0 ) {
         // Get the delta for the left
         vec4 left_coord = texture2D(height_map, pos - offset.xy);
-        float left_delta = our_height - (left_coord.x + left_coord.y);
-
-        out_delta.x = left_delta;
+        out_delta.x = our_height - (left_coord.x + left_coord.y);
     }
     else {
         out_delta.x = 0;
@@ -38,9 +36,7 @@ vec4 get_delta(vec2 pos, float our_height) {
     if ( pos.x < map_size.x ) {
         // Get the delta for the right
         vec4 right_coord = texture2D(height_map, pos + offset.xy);
-        float right_delta = our_height - (right_coord.x + right_coord.y);
-
-        out_delta.y = right_delta;
+        out_delta.y = our_height - (right_coord.x + right_coord.y);
     }
     else {
         out_delta.y = 0;
@@ -49,9 +45,7 @@ vec4 get_delta(vec2 pos, float our_height) {
     if ( pos.y > 0 ) {
         // Get the delta for the top
         vec4 top_coord = texture2D(height_map, pos - offset.yx);
-        float top_delta = our_height - (top_coord.x + top_coord.y);
-
-        out_delta.z = top_delta;
+        out_delta.z = our_height - (top_coord.x + top_coord.y);
     }
     else {
         out_delta.z = 0;
@@ -60,9 +54,7 @@ vec4 get_delta(vec2 pos, float our_height) {
     if ( pos.y < map_size.y ) {
         // Get the delta for the bottom
         vec4 bottom_coord = texture2D(height_map, pos + offset.yx);
-        float bottom_delta = our_height - (bottom_coord.x + bottom_coord.y);
-
-        out_delta.w = bottom_delta;
+        out_delta.w = our_height - (bottom_coord.x + bottom_coord.y);
     }
     else {
         out_delta.w = 0;
