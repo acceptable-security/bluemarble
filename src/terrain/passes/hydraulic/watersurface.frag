@@ -8,34 +8,60 @@ in vec2 pos; // (x, y)
 in float dt; // Time delta
 
 uniform sampler2D flux_map; // Current fluxmap. Fields (left, right, top bottom)
+uniform vec2 map_size; // Size of the current map
+
 const float dX = 1; // Distance between two grid points
 const float dY = 1; // ^^
 
 out vec4 height_coord;
 
+vec4 get_influx(vec2 pos) {
+    vec4 influx = vec4(0.0, 0.0, 0.0, 0.0);
+
+    // Calculate the right flux of the left field
+    if ( pos.x > 0 ) {
+        influx.x = texture2D(flux_map, vec2(pos.x - 1, pos.y)).y;
+    }
+
+    // Calculate the left flux of the right field
+    if ( pos.x < map_size.x ) {
+        influx.y = texture2D(flux_map, vec2(pos.x + 1, pos.y)).x;
+    }
+
+    // Calculate the down flux of the top field
+    if ( pos.y > 0 ) {
+        influx.z = texture2D(flux_map, vec2(pos.x, pos.y - 1)).w;
+    }
+
+    // Calculate the up flux of the down field
+    if ( pos.y < map_size.y ) {
+        influx.w = texture2D(flux_map, vec2(pos.x, pos.y + 1)).z;
+    }
+
+    return influx;
+}
+
+
 void main() {
     // Calculate our total outflux
-    vec4 our_flux = texture2D(flux_map, pos);
+    vec4 outflux = texture2D(flux_map, pos);
 
-    float outflux = our_flux.x +
-                    our_flux.y +
-                    our_flux.z +
-                    our_flux.w;
+    float outflux_total = outflux.x +
+                          outflux.y +
+                          outflux.z +
+                          outflux.w;
 
     // Calculuate component influx values
-    float left_flux   = texture2D(flux_map, vec2(pos.x - 1, pos.y)).y;
-    float right_flux  = texture2D(flux_map, vec2(pos.x + 1, pos.y)).x;
-    float top_flux    = texture2D(flux_map, vec2(pos.x, pos.y - 1)).w;
-    float bottom_flux = texture2D(flux_map, vec2(pos.x, pos.y + 1)).z;
+    vec4 influx = get_influx(pos);
 
     // Calculate total influx
-    float influx = left_flux +
-                   right_flux +
-                   top_flux +
-                   bottom_flux;
+    float influx_total = influx.x +
+                         influx.y +
+                         influx.z +
+                         influx.w;
 
     // Net Volume = in - out
-    float net_volume = influx - outflux;
+    float net_volume = influx_total - outflux_total;
 
     // Calculate new water height
     height_coord = our_coord;

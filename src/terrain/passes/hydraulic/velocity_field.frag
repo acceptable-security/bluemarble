@@ -18,18 +18,22 @@ out vec4 new_vector; // (u, v, unused, unused)
 vec4 get_influx(vec2 pos) {
     vec4 influx = vec4(0.0, 0.0, 0.0, 0.0);
 
+    // Calculate the right flux of the left field
     if ( pos.x > 0 ) {
         influx.x = texture2D(flux_map, vec2(pos.x - 1, pos.y)).y;
     }
 
+    // Calculate the left flux of the right field
     if ( pos.x < map_size.x ) {
         influx.y = texture2D(flux_map, vec2(pos.x + 1, pos.y)).x;
     }
 
+    // Calculate the down flux of the top field
     if ( pos.y > 0 ) {
         influx.z = texture2D(flux_map, vec2(pos.x, pos.y - 1)).w;
     }
 
+    // Calculate the up flux of the down field
     if ( pos.y < map_size.y ) {
         influx.w = texture2D(flux_map, vec2(pos.x, pos.y + 1)).z;
     }
