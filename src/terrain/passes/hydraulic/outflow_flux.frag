@@ -8,7 +8,7 @@ in vec2 pos; // (x, y) pair
 in float dt; // Time delta
 
 uniform sampler2D height_map; // Current heightmap. Fields: (land, water, sediment, unused)
-uniform vec2 height_map_size; // Size of the current heightmap.
+uniform vec2 map_size; // Size of the current heightmap.
 
 const float gravity = 9.8; // Acceleration due to gravity
 const float A = 0.00005; // Cross sectional area of the virtual pipe
@@ -34,7 +34,7 @@ vec4 get_delta(vec2 pos, float our_height) {
         out_delta.x = 0;
     }
 
-    if ( pos.x < height_map_size.x ) {
+    if ( pos.x < map_size.x ) {
         // Get the delta for the right
         vec4 right_coord = texture2D(height_map, vec2(pos.x + 1, pos.y));
         float right_delta = our_height - (right_coord.x + right_coord.y);
@@ -56,7 +56,7 @@ vec4 get_delta(vec2 pos, float our_height) {
         out_delta.z = 0;
     }
 
-    if ( pos.y < height_map_size.y ) {
+    if ( pos.y < map_size.y ) {
         // Get the delta for the bottom
         vec4 bottom_coord = texture2D(height_map, vec2(pos.x, pos.y + 1));
         float bottom_delta = our_height - (bottom_coord.x + bottom_coord.y);
