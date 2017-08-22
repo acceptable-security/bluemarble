@@ -12,6 +12,7 @@ uniform vec2 map_size; // Size of the current heightmap
 
 out vec4 out_coord;
 
+// Determine if a value is in-grid or not
 bool in_grid(vec2 pos) {
     return pos.x > 0 && pos.x < map_size.x &&
            pos.y > 0 && pos.y < map_size.y;
@@ -28,6 +29,7 @@ void main() {
     out_coord.xy = our_coord.xy;
 
     if ( in_grid(back_pos) ) {
+        // Copy the value
         out_coord.z = texture2D(height_map, back_pos).z;
     }
     else {
