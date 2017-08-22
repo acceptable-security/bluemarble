@@ -16,11 +16,13 @@ const float dY = 1; // ^^
 out vec4 new_vector; // (u, v, unused, unused)
 
 vec4 get_influx(vec2 pos) {
+    vec2 offset = vec2(1.0, 0.0);
+    
     vec4 influx = vec4(
-        texture2D(flux_map, vec2(pos.x - 1, pos.y)).y,
-        texture2D(flux_map, vec2(pos.x + 1, pos.y)).x,
-        texture2D(flux_map, vec2(pos.x, pos.y - 1)).w,
-        texture2D(flux_map, vec2(pos.x, pos.y + 1)).z
+        texture2D(flux_map, pos - offset.xy).y,
+        texture2D(flux_map, pos + offset.xy).x,
+        texture2D(flux_map, pos - offset.yx).w,
+        texture2D(flux_map, pos + offset.yx).z
     );
 
     return influx;
