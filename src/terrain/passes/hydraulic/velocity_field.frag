@@ -17,7 +17,8 @@ out vec4 new_vector; // (u, v, unused, unused)
 
 vec4 get_influx(vec2 pos) {
     vec2 offset = vec2(1.0, 0.0);
-    
+
+    // Get the influx values
     vec4 influx = vec4(
         texture2D(flux_map, pos - offset.xy).y,
         texture2D(flux_map, pos + offset.xy).x,
