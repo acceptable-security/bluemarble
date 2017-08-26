@@ -2,13 +2,13 @@
  * Simulate the evaporation of the water
  */
 
- #version 150 core
+#version 150 core
 
- in vec2 pos;
- in float dt; // Time delta
+in vec2 pos;
 
- uniform sampler2D height_map; // Current heightmap
- uniform vec2 map_size; // Size of the current heightmap
+uniform sampler2D height_map; // Current heightmap
+uniform vec2 map_size; // Size of the current heightmap
+uniform float dt; // Time delta
 
 const float evaporation = 1.0; // Water evaporation constant
 

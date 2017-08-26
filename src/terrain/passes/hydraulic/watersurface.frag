@@ -5,10 +5,10 @@
 
 in vec4 our_coord; // input coord (land, water, sediment, avg B)
 in vec2 pos; // (x, y)
-in float dt; // Time delta
 
 uniform sampler2D flux_map; // Current fluxmap. Fields (left, right, top bottom)
 uniform vec2 map_size; // Size of the current map
+uniform float dt; // Time delta
 
 const float dX = 1; // Distance between two grid points
 const float dY = 1; // ^^

@@ -5,10 +5,10 @@
 
 in vec4 in_flux; // input flux (fL, fR, fT, fB)
 in vec2 pos; // (x, y) pair
-in float dt; // Time delta
 
 uniform sampler2D height_map; // Current heightmap. Fields: (land, water, sediment, unused)
 uniform vec2 map_size; // Size of the current heightmap.
+uniform float dt; // Time delta
 
 const float gravity = 9.8; // Acceleration due to gravity
 const float A = 0.00005; // Cross sectional area of the virtual pipe

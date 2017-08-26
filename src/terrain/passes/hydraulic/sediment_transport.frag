@@ -4,11 +4,11 @@
 #version 150 core
 
 in vec2 pos;
-in float dt; // Time delta
 
 uniform sampler2D height_map; // Current heightmap
 uniform sampler2D velocity_field; // The velocity field
 uniform vec2 map_size; // Size of the current heightmap
+uniform float dt; // Time delta
 
 out vec4 out_coord;
 
