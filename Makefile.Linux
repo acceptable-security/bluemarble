@@ -11,8 +11,8 @@ LDFLAGS = -lm -lglfw -lGLEW -lGLU -lGL
 # DONT TOUCH AFTER THIS - IT'S ALL AUTO
 
 NAME = $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-EXT = .c
-SOURCES =$(shell find src/ -name '*.c')
+EXT = .cpp
+SOURCES =$(shell find src/ -name '*.cpp')
 
 
 OBJECTS = $(subst src/, build/, $(SOURCES:$(EXT)=.o))
