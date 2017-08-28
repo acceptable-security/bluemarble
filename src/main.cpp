@@ -7,11 +7,8 @@
 #include "include/GLFW.hpp"
 
 int main(int argc, char* argv[]) {
-    glfwInit();
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    GLFW::init();
+    GLFW::setGLVersion(3, 3);
 
     GLFW::Window window(800, 600, "Memes");
 
@@ -23,7 +20,7 @@ int main(int argc, char* argv[]) {
         window.swapBuffers();
     }
 
-    glfwTerminate();
+    GLFW::terminate();
 
     return 0;
 }

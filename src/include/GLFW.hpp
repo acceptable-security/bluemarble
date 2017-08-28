@@ -9,6 +9,20 @@
 
 namespace GLFW {
 
+void init() {
+    glfwInit();
+}
+
+void terminate() {
+    glfwTerminate();
+}
+
+void setGLVersion(unsigned int major, unsigned int minor) {
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+}
+
 template<typename T>
 struct wrapper_traits;
 
