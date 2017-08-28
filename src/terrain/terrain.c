@@ -1,9 +1,6 @@
 #include "map.h"
 #include "terrain.h"
 
-#include "simplex_noise.h"
-#include "cellular_noise.h"
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
@@ -51,79 +48,6 @@ terrain_t* terrain_init(int width, int height) {
     return terrain;
 }
 
-// Fill map with 2 octaves of cell noise and N - 2 octaves of simplex.
-void terrain_fill_map(terrain_t* terrain) {
-    float freq = 4.0 / terrain->map->width;
-
-    for ( int x = 0; x < terrain->map->width; x++ ) {
-        for ( int y = 0; y < terrain->map->height; y++ ) {
-            float totalCell = 0.0f;
-            float totalSimp = 0.0f;
-            float frequency = freq;
-            float amplitude = 1.0f;
-
-            int octave;
-
-            // 2 octaves of cellular noise
-            for ( octave = 0; octave < 2; octave++ ) {
-                int offset = octave * 7;
-                totalCell += cellular_noise(x * frequency + offset, y * frequency + offset) * amplitude;
-
-                frequency *= terrain->lacunarity;
-                amplitude *= terrain->gain;
-            }
-
-            // Rest of them be simplex noise
-            for ( amplitude *= 30; octave < terrain->octaves; octave++ ) {
-                int offset = octave * 7;
-                totalSimp += (simplex_noise_2d(x * frequency + offset, y * frequency + offset) * amplitude);
-
-                frequency *= terrain->lacunarity;
-                amplitude *= terrain->gain;
-            }
-
-            map_set(terrain->map, x, y, totalCell + totalSimp);
-
-            // Adjust the min/max as we go
-            if ( map_get(terrain->map, x, y) > terrain->max ) {
-                terrain->max = map_get(terrain->map, x, y);
-            }
-
-            if ( map_get(terrain->map, x, y) < terrain->min ) {
-                terrain->min = map_get(terrain->map, x, y);
-            }
-        }
-    }
-
-    terrain_normalize(terrain);
-}
-
-// Calculates the minimum and maximum bounds of the terrain
-void terrain_calculate_bounds(terrain_t* terrain) {
-    terrain->min = FLT_MAX;
-    terrain->max = FLT_MIN;
-
-    for ( int x = 0; x < terrain->map->width; x++ ) {
-        for ( int y = 0; y < terrain->map->height; y++ ) {
-            if ( map_get(terrain->map, x, y) < terrain->min ) {
-                terrain->min = map_get(terrain->map, x, y);
-            }
-
-            if ( map_get(terrain->map, x, y) > terrain->max ) {
-                terrain->max = map_get(terrain->map, x, y);
-            }
-        }
-    }
-}
-
-// Make sure the minimum goes to 0 and the maximum goes to 1.0
-void terrain_normalize(terrain_t* terrain) {
-    for ( int x = 0; x < terrain->map->width; x++ ) {
-        for ( int y = 0; y < terrain->map->height; y++ ) {
-            map_set(terrain->map, x, y, (map_get(terrain->map, x, y) - terrain->min) / (terrain->max - terrain->min));
-        }
-    }
-}
 
 
 // Draw the terrain to an image.
@@ -165,16 +89,4 @@ void terrain_draw(terrain_t* terrain, image_t* image) {
             image_set(image, x, y, color);
         }
     }
-}
-
-// Clean the terrain allocations.
-void terrain_clean(terrain_t* terrain) {
-    if ( terrain == NULL ) {
-        return;
-    }
-
-    map_clean(terrain->map);
-    map_clean(terrain->water);
-
-    free(terrain);
 }
