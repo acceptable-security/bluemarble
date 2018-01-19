@@ -1,26 +1,63 @@
-#version 160 core
+#version 200 es
+precision mediump float;
 
-#define general_skew ((sqrt(3.0) - 1.0) * 0.5)
-#define general_unskew ((3.0 - sqrt(3.0)) / 6.0)
+attribute vec2 pos;
 
-in vec2 pos;
-out vec4 value;
+const float general_skew = 0.3660254037844386;
+const float general_unskew = 0.21132486540518713; 
 
-uniform uint octaves;
-uniform float gain;
-uniform float lacunarity;
-uniform vec2 map_size;
+const float gain = 0.65;
+const float lacunarity = 2.0;
+vec2 map_size = vec2(800, 600);
 
-const float grad_s[8] = { 1.00000000000000000000, 0.70710678146758598750, 0.00000000079489665423, -0.70710678034343221743, -1.00000000000000000000, -0.70710678259173953553, -0.00000000238468996268, 0.70710677921927866940};
-const float grad_c[8] = { 0.00000000000000000000, 0.70710678090550915798, 1.00000000000000000000, 0.70710678202966281702, 0.00000000158979330845, -0.70710677978135549893, -1.00000000000000000000, -0.70710678315381647607};
+float grad_s[8];
+float grad_c[8];
+
+void setup_grad() {
+    grad_s[0] = 1.0;
+    grad_s[1] = 0.70710678146758598750;
+    grad_s[2] = 0.00000000079489665423;
+    grad_s[3] = -0.70710678034343221743;
+    grad_s[4] = -1.0;
+    grad_s[5] = -0.70710678259173953553;
+    grad_s[6] = -0.00000000238468996268;
+    grad_s[7] = 0.70710677921927866940;
+
+    grad_c[0] = 0.0;
+    grad_c[1] = 0.70710678090550915798;
+    grad_c[2] = 1.0;
+    grad_c[3] = 0.70710678202966281702;
+    grad_c[4] = 0.00000000158979330845;
+    grad_c[5] = -0.70710677978135549893;
+    grad_c[6] = -1.00000000000000000000;
+    grad_c[7] = -0.70710678315381647607;
+}
 
 // Do a dot product using the gradients
 float dot_product(int i, vec2 pos) {
-    if ( i == 1 ) {
-        return grad_s[i] * pos.x + grad_s[i] * pos.y;
+    if ( i == 0 ) {
+        return grad_s[0] * pos.x + grad_c[0] * pos.y;
     }
-    else {
-        return grad_c[i] * pos.x + grad_c[i] * pos.y;
+    else if ( i == 1 ) {
+        return grad_s[1] * pos.x + grad_c[1] * pos.y;
+    }
+    else if ( i == 2 ) {
+        return grad_s[2] * pos.x + grad_c[2] * pos.y;
+    }
+    else if ( i == 3 ) {
+        return grad_s[3] * pos.x + grad_c[3] * pos.y;
+    }
+    else if ( i == 4 ) {
+        return grad_s[4] * pos.x + grad_c[4] * pos.y;
+    }
+    else if ( i == 5 ) {
+        return grad_s[5] * pos.x + grad_c[5] * pos.y;
+    }
+    else if ( i == 6 ) {
+        return grad_s[6] * pos.x + grad_c[6] * pos.y;
+    }
+    else if ( i == 7 ) {
+        return grad_s[7] * pos.x + grad_c[7] * pos.y;
     }
 }
 
@@ -47,7 +84,7 @@ float euclidean_squared(vec2 a, vec2 b) {
 float simplex(vec2 pos) {
     float skew_value = (pos.x + pos.y) * general_skew;
 
-    vec2 cornerb = floor(pos.xy);
+    vec2 cornerb = floor(pos.xy + skew_value);
 
     float unskew_value = (cornerb.x + cornerb.y) * general_unskew;
 
@@ -67,38 +104,31 @@ float simplex(vec2 pos) {
     vec2 dism = (disb - (cornerm - cornerb)) + general_unskew;
     vec2 dist = disb - 1.0 + general_unskew + general_unskew;
 
+    int gradb = int(rand(cornerb) * 7.0);
+    int gradm = int(rand(cornerm) * 7.0);
+    int gradt = int(rand(cornert) * 7.0);
 
-    int gradb = int(rand(cornerb));
-    int gradm = int(rand(cornerm));
-    int gradt = int(rand(cornert));
+    float noiseb = 0.0;
+    float noisem = 0.0;
+    float noiset = 0.0;
 
-    float tempdis = 0.5f - (disb.x * disb.x) - (disb.y * disb.y);
-    float noiseb, noisem, noiset;
+    float tempdis = 0.5 - (disb.x * disb.x) - (disb.y * disb.y);
 
-    if ( tempdis < 0.0f ) {
-        noiseb = 0.0f;
-    }
-    else {
+    if ( tempdis > 0.0 ) {
         tempdis *= tempdis;
         noiseb = tempdis * tempdis * dot_product(gradb, disb);
     }
 
-    tempdis = 0.5f - (dism.x * dism.x) - (dism.y * dism.y);
+    tempdis = 0.5 - (dism.x * dism.x) - (dism.y * dism.y);
 
-    if ( tempdis < 0.0f ) {
-        noisem = 0.0f;
-    }
-    else {
+    if ( tempdis > 0.0 ) {
         tempdis *= tempdis;
         noisem = tempdis * tempdis * dot_product(gradm, dism);
     }
 
-    tempdis = 0.5f - (dist.x * dist.x) - (dist.y * dist.y);
+    tempdis = 0.5 - (dist.x * dist.x) - (dist.y * dist.y);
 
-    if ( tempdis < 0.0f ) {
-        noiset = 0.0f;
-    }
-    else {
+    if ( tempdis > 0.0 ) {
         tempdis *= tempdis;
         noiset = tempdis * tempdis * dot_product(gradt, dist);
     }
@@ -106,7 +136,7 @@ float simplex(vec2 pos) {
     return noiseb + noisem + noiset;
 }
 
-// Generate Cellular Noise
+    // Generate Cellular Noise
 float cellular(vec2 pos) {
     vec2 points[9];
     float x = pos.x;
@@ -117,8 +147,8 @@ float cellular(vec2 pos) {
 
     for ( int i = 0; i < 3; i++ ) {
         for ( int j = 0; j < 3; j++ ) {
-            int temp_x = floor_x + i - 1;
-            int temp_y = floor_y + j - 1;
+            float temp_x = float(floor_x + i - 1);
+            float temp_y = float(floor_y + j - 1);
 
             points[(j * 3) + i] = vec2(
                 temp_x + rand(vec3(temp_x, temp_y, 1)),
@@ -127,8 +157,8 @@ float cellular(vec2 pos) {
         }
     }
 
-    float dist1 = 999999;
-    float dist2 = 999999;
+    float dist1 = 999999.0;
+    float dist2 = 999999.0;
 
     for ( int i = 0; i < 3; i++ ) {
         for ( int j = 0; j < 3; j++ ) {
@@ -151,30 +181,37 @@ float cellular(vec2 pos) {
 }
 
 void main() {
-    float totalCell = 0.0f;
-    float totalSimp = 0.0f;
+    setup_grad();
+    
+    float totalCell = 0.0;
+    float totalSimp = 0.0;
     float frequency = 4.0 / map_size.x;
-    float amplitude = 1.0f;
+    float amplitude = 1.0;
 
-    int octave;
+    int octave = 0;
 
     // 2 octaves of cellular noise
-    for ( octave = 0; octave < 2; octave++ ) {
+    for ( int i = 0; i < 2; i++ ) {
         int offset = octave * 7;
-        totalCell += cellular(pos * frequency + offset) * amplitude;
+        totalCell += cellular(pos * frequency + vec2(offset, offset)) * amplitude;
 
         frequency *= lacunarity;
         amplitude *= gain;
+        octave++;
     }
+
+    amplitude *= 30.0;
 
     // Rest of them be simplex noise
-    for ( amplitude *= 30; octave < octaves; octave++ ) {
+    for ( int j = 0; j < 8; j++ ) {
         int offset = octave * 7;
-        totalSimp += (simplex(pos * frequency + offset) * amplitude);
+        totalSimp += (simplex(pos * frequency + vec2(offset, offset)) * amplitude);
 
         frequency *= lacunarity;
         amplitude *= gain;
+        octave++;
     }
 
-    value.x = totalCell + totalSimp;
+    float dicks = totalCell + totalSimp;
+    gl_FragColor = vec4(dicks, dicks, dicks, 1.0);
 }
