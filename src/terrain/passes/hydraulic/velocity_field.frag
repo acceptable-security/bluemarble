@@ -1,19 +1,12 @@
 /**
  * Recalculate vector field based off of flow of the water
  */
-#version 150 core
-
-in vec4 our_vector; // (u, v, unused, unused)
-in vec2 pos;
 
 uniform sampler2D flux_map;
 uniform sampler2D height_map; // Map at end of iteration (land, water, sediment, avg B)
-uniform vec2 map_size;
 
-const float dX = 1; // Distance between two grid points
-const float dY = 1; // ^^
-
-out vec4 new_vector; // (u, v, unused, unused)
+const float dX = 1.0; // Distance between two grid points
+const float dY = 1.0; // ^^
 
 vec4 get_influx(vec2 pos) {
     vec2 offset = vec2(1.0, 0.0);
@@ -30,6 +23,8 @@ vec4 get_influx(vec2 pos) {
 }
 
 void main() {
+    vec2 pos = gl_FragCoord.xy;
+
     // Calculuate the influx
     vec4 influx = get_influx(pos);
 
@@ -43,11 +38,11 @@ void main() {
     float avg_water_height = texture2D(height_map, pos).w;
 
     // Calculate amount of water moving through X/Y pipes
-    float avg_water_x = (influx.x - our_left_flux + our_right_flux - influx.y) / 2;
-    float avg_water_y = (influx.z - our_top_flux + our_bottom_flux - influx.w) / 2;
+    float avg_water_x = (influx.x - our_left_flux + our_right_flux - influx.y) / 2.0;
+    float avg_water_y = (influx.z - our_top_flux + our_bottom_flux - influx.w) / 2.0;
 
     // Recalculate vector components
-    new_vector = vec4(
+    gl_FragColor = vec4(
         avg_water_x / (dY * avg_water_height),
         avg_water_y / (dX * avg_water_height),
         0.0, 0.0

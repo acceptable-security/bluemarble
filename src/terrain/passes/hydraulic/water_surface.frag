@@ -1,19 +1,12 @@
 /**
  * Calculate the new water surface levels
  */
-#version 150 core
 
-in vec4 our_coord; // input coord (land, water, sediment, avg B)
-in vec2 pos; // (x, y)
-
+uniform sampler2D height_map; // Current heightmap.
 uniform sampler2D flux_map; // Current fluxmap. Fields (left, right, top bottom)
-uniform vec2 map_size; // Size of the current map
-uniform float dt; // Time delta
 
 const float dX = 1; // Distance between two grid points
 const float dY = 1; // ^^
-
-out vec4 height_coord;
 
 vec4 get_influx(vec2 pos) {
     vec2 offset = vec2(1.0, 0.0);
@@ -30,6 +23,9 @@ vec4 get_influx(vec2 pos) {
 }
 
 void main() {
+    vec2 pos = gl_FragCoord.xy;
+    vec4 our_coord = texture2D(height_map, pos);
+
     // Calculate our total outflux
     vec4 outflux = texture2D(flux_map, pos);
 
@@ -51,7 +47,7 @@ void main() {
     float net_volume = influx_total - outflux_total;
 
     // Calculate new water height
-    height_coord = our_coord;
-    height_coord.y += (net_volume) / (dX * dY);
-    height_coord.w = (height_coord.y - our_coord.y) / 2;
+    gl_FragColor.xz = our_coord.xz;
+    gl_FragColor.y += (net_volume) / (dX * dY);
+    gl_FragColor.w = (gl_FragColor.y - our_coord.y) / 2;
 }

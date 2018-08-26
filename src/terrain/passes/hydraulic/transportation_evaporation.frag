@@ -1,38 +1,41 @@
 /**
- * Simulate the movement of disolved sediment
+ * Simulate the movement of disolved sediment and evaporate water
  */
-#version 150 core
-
-in vec2 pos;
 
 uniform sampler2D height_map; // Current heightmap
 uniform sampler2D velocity_field; // The velocity field
-uniform vec2 map_size; // Size of the current heightmap
 uniform float dt; // Time delta
+uniform vec2 map_size;
 
-out vec4 out_coord;
+const float evaporation = 0.05; // % of water to evaporate
 
 // Determine if a value is in-grid or not
 bool in_grid(vec2 pos) {
-    return pos.x > 0 && pos.x < map_size.x &&
-           pos.y > 0 && pos.y < map_size.y;
+    return pos.x > 0.0 && pos.x < map_size.x &&
+           pos.y > 0.0 && pos.y < map_size.y;
 }
 
 void main() {
+    vec2 pos = gl_FragCoord.xy;
+
     vec4 our_coord = texture2D(height_map, pos);
     vec4 our_velocity = texture2D(velocity_field, pos);
 
     // Take a eulerian step back
     vec2 back_pos = pos - (our_velocity.xy * dt);
 
-    // Copy old values
-    out_coord.xy = our_coord.xy;
+    gl_FragColor.xw = our_coord.xw;
 
     if ( in_grid(back_pos) ) {
         // Copy the value
-        out_coord.z = texture2D(height_map, back_pos).z;
+        gl_FragColor.z = texture2D(height_map, back_pos).z;
     }
     else {
         // TODO - interpoliate between four nearest neighbors
+        // Until then.... do nothing? this doesnt seem like a stable
+        // solution.
     }
+
+    // Evaporate
+    gl_FragColor.y = our_coord.y * ((1.0 - evaporation) * dt);
 }

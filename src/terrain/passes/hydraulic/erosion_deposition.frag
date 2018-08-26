@@ -1,21 +1,21 @@
 /**
  * Simulate the Erosion and the Deposition of sediment suspended in water
  */
-#version 150 core
-
-in vec2 pos;
 
 uniform sampler2D height_map; // Current heightmap
 uniform sampler2D velocity_field; // The velocity field
-uniform vec2 map_size; // Size of the current heightmap
 
 const float sediment_capacity = 1.0; // Sediment capacity constant
 const float sediment_disolve = 1.0; // Sediment disolving constant
 const float sediment_deposit = 1.0; // Sediment deposition constant
 
-out vec4 out_coord;
+float pow2(float x) {
+    return x * x;
+}
 
 void main() {
+    vec2 pos = gl_FragCoord.xy;
+
     vec4 our_coord = texture2D(height_map, pos);
     vec2 offset = vec2(1.0, 0.0);
 
@@ -32,31 +32,31 @@ void main() {
         2.0
     ));
 
-    // Calculate the local angle
-    float r = pow(normal.x, 2) +
-              pow(normal.y, 2) +
-              pow(normal.z, 2);
+    // Calculate the localgle
+    float r = pow2(normal.x) +
+              pow2(normal.y) +
+              pow2(normal.z);
 
     float angle = acos(normal.z / r);
 
     // Get the length of our current vector.
     vec4 our_vec = texture2D(velocity_field, pos);
-    float vec_len = sqrt(pow(our_vec.x, 2) + pow(our_vec.y, 2) + pow(our_vec.z, 2));
+    float vec_len = sqrt(pow2(our_vec.x) + pow2(our_vec.y) + pow2(our_vec.z));
 
     // Calculate our sediment capacity
     float capacity = sediment_capacity * sin(angle) * vec_len;
 
     // Calculate the new terrain/sediment heights
-    out_coord.y = our_coord.y;
+    gl_FragColor.yw = our_coord.yw;
 
     if ( capacity > our_coord.z ) {
         // Disolve some of the terrain into the water
-        out_coord.x = our_coord.x - (sediment_disolve * (capacity - our_coord.z));
-        out_coord.z = our_coord.z + (sediment_disolve * (capacity - our_coord.z));
+        gl_FragColor.x = our_coord.x - (sediment_disolve * (capacity - our_coord.z));
+        gl_FragColor.z = our_coord.z + (sediment_disolve * (capacity - our_coord.z));
     }
     else {
         // Deposit some of the disolved sediment into the terrain
-        out_coord.x = our_coord.x + (sediment_deposit * (our_coord.z - capacity));
-        out_coord.z = our_coord.z - (sediment_deposit * (our_coord.z - capacity));
+        gl_FragColor.x = our_coord.x + (sediment_deposit * (our_coord.z - capacity));
+        gl_FragColor.z = our_coord.z - (sediment_deposit * (our_coord.z - capacity));
     }
 }

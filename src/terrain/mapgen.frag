@@ -1,14 +1,9 @@
-#version 200 es
-precision mediump float;
-
-attribute vec2 pos;
-
 const float general_skew = 0.3660254037844386;
 const float general_unskew = 0.21132486540518713; 
 
 const float gain = 0.65;
 const float lacunarity = 2.0;
-vec2 map_size = vec2(800, 600);
+uniform vec2 map_size;
 
 float grad_s[8];
 float grad_c[8];
@@ -187,6 +182,7 @@ void main() {
     float totalSimp = 0.0;
     float frequency = 4.0 / map_size.x;
     float amplitude = 1.0;
+    vec2 pos = gl_FragCoord.xy;
 
     int octave = 0;
 
@@ -212,6 +208,6 @@ void main() {
         octave++;
     }
 
-    float dicks = totalCell + totalSimp;
-    gl_FragColor = vec4(dicks, dicks, dicks, 1.0);
+    float total = totalCell + totalSimp;
+    gl_FragColor = vec4(total, 0.0, 0.0, 0.0);
 }

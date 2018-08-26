@@ -1,10 +1,7 @@
 /**
  * Quick fallthrough vertex shader for GPGPU code
  */
-#version 150 core
-
-in vec4 position;
 
 void main() {
-    gl_Position = position;
+	gl_Position = vec4( position, 1.0 );
 }
