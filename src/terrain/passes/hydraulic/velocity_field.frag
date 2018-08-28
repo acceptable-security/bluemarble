@@ -4,12 +4,13 @@
 
 uniform sampler2D flux_map;
 uniform sampler2D height_map; // Map at end of iteration (land, water, sediment, avg B)
+uniform vec2 map_size;
 
 const float dX = 1.0; // Distance between two grid points
 const float dY = 1.0; // ^^
 
 vec4 get_influx(vec2 pos) {
-    vec2 offset = vec2(1.0, 0.0);
+    vec2 offset = vec2(1.0, 0.0) / map_size;
 
     // Get the influx values
     vec4 influx = vec4(
@@ -23,7 +24,7 @@ vec4 get_influx(vec2 pos) {
 }
 
 void main() {
-    vec2 pos = gl_FragCoord.xy;
+    vec2 pos = gl_FragCoord.xy / map_size;
 
     // Calculuate the influx
     vec4 influx = get_influx(pos);

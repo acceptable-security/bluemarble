@@ -17,7 +17,7 @@ const float dY = 1.0; // ^^
 const float static_mult = A * gravity * (1.0 / l); // Precompute part of the computation
 
 vec4 get_delta(vec2 pos, float our_height) {
-    vec2 offset = vec2(1.0, 0.0);
+    vec2 offset = vec2(1.0, 0.0) / map_size;
     vec4 out_delta;
 
     if ( pos.x > 0.0 ) {
@@ -29,7 +29,7 @@ vec4 get_delta(vec2 pos, float our_height) {
         out_delta.x = 0.0;
     }
 
-    if ( pos.x < map_size.x ) {
+    if ( pos.x < 1./map_size.x ) {
         // Get the delta for the right
         vec4 right_coord = texture2D(height_map, pos + offset.xy);
         out_delta.y = our_height - (right_coord.x + right_coord.y);
@@ -47,7 +47,7 @@ vec4 get_delta(vec2 pos, float our_height) {
         out_delta.z = 0.0;
     }
 
-    if ( pos.y < map_size.y ) {
+    if ( pos.y < 1./map_size.y ) {
         // Get the delta for the bottom
         vec4 bottom_coord = texture2D(height_map, pos + offset.yx);
         out_delta.w = our_height - (bottom_coord.x + bottom_coord.y);
@@ -60,7 +60,7 @@ vec4 get_delta(vec2 pos, float our_height) {
 }
 
 void main() {
-    vec2 pos = gl_FragCoord.xy;
+    vec2 pos = gl_FragCoord.xy / map_size;
 
     // Precompute as much as possible
     float precomp = dt * static_mult;

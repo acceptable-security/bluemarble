@@ -35,102 +35,113 @@ class TerrainProgram extends ShaderProgram {
 		);
 
 		// Do inital step
+		console.log('Doing initial mapgen');
 		this.map_gen.render();
+		console.log('Done');
 
 		// Add rain at (0, 0)
 		this.water_increment = new ShaderFunction(
 			this,
 			"terrain/passes/hydraulic/water_increment.frag",
-			{},
+			{ map_size: this.map_size },
 			{ height_map: this.height_map1 },
-			undefined // this.height_map2
+			this.height_map2
 		);
 
-		// // Outflow/Flux Step
-		// this.outflow_flux = new ShaderFunction(
-		// 	this,
-		// 	"terrain/passes/hydraulic/outflow_flux.frag",
-		// 	{ dt: { type: 'f', value: 0 }, map_size: this.map_size },
-		// 	{ flux_map: this.flux_map1, height_map: this.height_map2 },
-		// 	this.flux_map2
-		// );
+		// Outflow/Flux Step
+		this.outflow_flux = new ShaderFunction(
+			this,
+			"terrain/passes/hydraulic/outflow_flux.frag",
+			{ dt: { type: 'f', value: 0 }, map_size: this.map_size },
+			{ flux_map: this.flux_map1, height_map: this.height_map2 },
+			this.flux_map2
+		);
 
-		// // Water Height Step
-		// this.water_height = new ShaderFunction(
-		// 	this,
-		// 	"terrian/passes/hydraulic/water_surface.frag",
-		// 	{},
-		// 	{ flux_map: this.flux_map2, height_map: this.height_map2 },
-		// 	this.height_map1
-		// );
+		// Water Height Step
+		this.water_height = new ShaderFunction(
+			this,
+			"terrain/passes/hydraulic/water_surface.frag",
+			{ dt: { type: 'f', value: 0 }, map_size: this.map_size },
+			{ flux_map: this.flux_map2, height_map: this.height_map2 },
+			this.height_map1
+		);
 
-		// this.velocity_field = new ShaderFunction(
-		// 	this,
-		// 	"terrain/passes/hydraulic/velocity_field.frag",
-		// 	{},
-		// 	{ flux_map: this.flux_map2, height_map: this.height_map1 },
-		// 	this.velocity_map
-		// );
+		this.velocity_field = new ShaderFunction(
+			this,
+			"terrain/passes/hydraulic/velocity_field.frag",
+			{  map_size: this.map_size  },
+			{ flux_map: this.flux_map2, height_map: this.height_map1 },
+			this.velocity_map
+		);
 
-		// this.erosion_deposition = new ShaderFunction(
-		// 	this,
-		// 	"terrain/passes/hydraulic/erosion_deposition.frag",
-		// 	{},
-		// 	{ height_map: this.height_map1, velocity_map: this.velocity_map },
-		// 	this.height_map2
-		// );
+		this.erosion_deposition = new ShaderFunction(
+			this,
+			"terrain/passes/hydraulic/erosion_deposition.frag",
+			{ map_size: this.map_size },
+			{ height_map: this.height_map1, velocity_map: this.velocity_map },
+			this.height_map2
+		);
 
-		// this.transportation_evaporation = new ShaderFunction(
-		// 	this,
-		// 	"terrain/passes/hydraulic/transportation_evaporation.frag",
-		// 	{ dt: { type: 'f', value: 0 }, map_size: this.map_size },
-		// 	{ height_map: this.height_map2, flux_map: this.flux_map2, velocity_map: this.velocity_map },
-		// 	this.height_map1
-		// );
+		this.transportation_evaporation = new ShaderFunction(
+			this,
+			"terrain/passes/hydraulic/transportation_evaporation.frag",
+			{ dt: { type: 'f', value: 0 }, map_size: this.map_size },
+			{ height_map: this.height_map2, flux_map: this.flux_map2, velocity_map: this.velocity_map },
+			this.height_map1
+		);
 
-		// this.pretty = new ShaderFunction(
-		// 	this,
-		// 	"terrain/colorShader.frag",
-		// 	{},
-		// 	{ height_map: this.height_map1 },
-		// 	undefined
-		// );
+		this.pretty = new ShaderFunction(
+			this,
+			"terrain/colorShader.frag",
+			{ map_size: this.map_size },
+			{ height_map: this.height_map1 },
+			undefined
+		);
+
+		this.map_gen.render();
+		this.water_increment.render();
 	}
 
 	frame() {
-		// const dt = { type: 'f', value: (Date.now() - this.lastFrame) / 1000 };
-		// this.lastFrame = Date.now();
+		const dt = { type: 'f', value: (Date.now() - this.lastFrame) / 1000 };
+		// console.log(dt.value);
+		this.lastFrame = Date.now();
 
-		// if ( this.flip ) {
-		// 	this.outflow_flux.variables['flux_map'] = this.flux_map2;
-		// 	this.outflow_flux.output = this.flux_map1;
+		if ( this.flip ) {
+			this.outflow_flux.variables['flux_map'] = this.flux_map2;
+			this.outflow_flux.output = this.flux_map1;
 
-		// 	this.water_height.variables['flux_map'] = this.flux_map1;
-		// 	this.velocity_field.variables['flux_map'] = this.flux_map1;
-		// 	this.transportation_evaporation.variables['flux_map'] = this.flux_map1;
-		// }
-		// else {
-		// 	this.outflow_flux.variables['flux_map'] = this.flux_map1;
-		// 	this.outflow_flux.output = this.flux_map2;
+			this.water_height.variables['flux_map'] = this.flux_map1;
+			this.velocity_field.variables['flux_map'] = this.flux_map1;
+			this.transportation_evaporation.variables['flux_map'] = this.flux_map1;
+		}
+		else {
+			this.outflow_flux.variables['flux_map'] = this.flux_map1;
+			this.outflow_flux.output = this.flux_map2;
 
-		// 	this.water_height.variables['flux_map'] = this.flux_map2;
-		// 	this.velocity_field.variables['flux_map'] = this.flux_map2;
-		// 	this.transportation_evaporation.variables['flux_map'] = this.flux_map2;
-		// }
+			this.water_height.variables['flux_map'] = this.flux_map2;
+			this.velocity_field.variables['flux_map'] = this.flux_map2;
+			this.transportation_evaporation.variables['flux_map'] = this.flux_map2;
+		}
 
-		// this.outflow_flux.constants['dt'] = dt;
-		// this.transportation_evaporation.constants['dt'] = dt;
+		this.outflow_flux.constants['dt'] = dt;
+		this.transportation_evaporation.constants['dt'] = dt;
+		this.water_height.constants['dt'] = dt;
 
-		// this.flip = !this.flip;
+		this.flip = !this.flip;
 
-		this.water_increment.render();
-		// this.outflow_flux.render();
-		// this.water_height.render();
-		// this.velocity_field.render();
-		// this.erosion_deposition.render();
-		// this.transportation_evaporation.render();
-		// this.pretty.render();
+		this.outflow_flux.render();
+		this.water_height.render();
+		this.velocity_field.render();
+		this.erosion_deposition.render();
+		this.transportation_evaporation.render();
+		this.pretty.render();
+
+		// console.log('frame');
 	}
 }
 const program = new TerrainProgram();
-program.start();
+
+window.setInterval(() => {
+	program.frame();
+}, 50);

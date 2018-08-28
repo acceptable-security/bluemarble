@@ -4,12 +4,14 @@
 
 uniform sampler2D height_map; // Current heightmap.
 uniform sampler2D flux_map; // Current fluxmap. Fields (left, right, top bottom)
+uniform vec2 map_size;
+uniform float dt;
 
-const float dX = 1; // Distance between two grid points
-const float dY = 1; // ^^
+const float dX = 1.0; // Distance between two grid points
+const float dY = 1.0; // ^^
 
 vec4 get_influx(vec2 pos) {
-    vec2 offset = vec2(1.0, 0.0);
+    vec2 offset = vec2(1.0, 0.0) / map_size;
 
     // Get the influx values
     vec4 influx = vec4(
@@ -23,7 +25,7 @@ vec4 get_influx(vec2 pos) {
 }
 
 void main() {
-    vec2 pos = gl_FragCoord.xy;
+    vec2 pos = gl_FragCoord.xy / map_size;
     vec4 our_coord = texture2D(height_map, pos);
 
     // Calculate our total outflux
@@ -44,10 +46,10 @@ void main() {
                          influx.w;
 
     // Net Volume = in - out
-    float net_volume = influx_total - outflux_total;
+    float net_volume = dt * (influx_total - outflux_total);
 
     // Calculate new water height
     gl_FragColor.xz = our_coord.xz;
-    gl_FragColor.y += (net_volume) / (dX * dY);
-    gl_FragColor.w = (gl_FragColor.y - our_coord.y) / 2;
+    gl_FragColor.y = our_coord.y + (net_volume / (dX * dY));
+    gl_FragColor.w = (gl_FragColor.y - our_coord.y) / 2.0;
 }

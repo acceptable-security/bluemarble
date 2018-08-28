@@ -16,14 +16,10 @@ class ShaderVariable {
 	}
 
 	get rawData() {
-		const gl = this.program.renderer.getContext();
-		const framebuffer = this.buffer.__webglFramebuffer;
-		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-
 		const { width, height } = this.buffer;
 
 		const data = new Float32Array(width * height * 4);
-		gl.readPixels(0, 0, width, height, gl.RGBA, gl.FLOAT, data);	
+		this.program.renderer.readRenderTargetPixels(this.buffer, 0, 0, width, height, data);
 
 		return data;
 	}
@@ -56,20 +52,19 @@ class ShaderFunction {
 			fragmentShader: shaders[this.file]
 		});
 
-		const square = new Float32Array([
-			-1.0, -1.0,  1.0,
-			 1.0, -1.0,  1.0,
-			 1.0,  1.0,  1.0,
+		// const square = new Float32Array([
+		// 	-1.0, -1.0,  1.0,
+		// 	 1.0, -1.0,  1.0,
+		// 	 1.0,  1.0,  1.0,
 
-			 1.0,  1.0,  1.0,
-			-1.0,  1.0,  1.0,
-			-1.0, -1.0,  1.0
-		]);
+		// 	 1.0,  1.0,  1.0,
+		// 	-1.0,  1.0,  1.0,
+		// 	-1.0, -1.0,  1.0
+		// ]);
 
-		const geometry = new THREE.BufferGeometry();
-		geometry.addAttribute('position', new THREE.BufferAttribute(square, 3));
-
-		this._mesh = new THREE.Mesh(geometry, this._material);
+		// const geometry = new THREE.BufferGeometry();
+		// geometry.addAttribute('position', new THREE.BufferAttribute(square, 3));
+		this._mesh = new THREE.Mesh(new THREE.PlaneGeometry(this.program.width, this.program.height, this.program.width, this.program.height), this._material);
 		this.scene.add(this._mesh);
 	}
 
@@ -79,15 +74,13 @@ class ShaderFunction {
 				throw new Error(variable + " must be a ShaderVariable");
 			}
 
-			this.uniforms[variable] = { type: 't', value: this.variables[variable].buffer };
+			const texture = this.variables[variable].buffer.texture;
+			this.uniforms[variable] = { type: 't', value: texture };
 		}
 
 		for ( const constant in this.constants ) {
-			this.uniforms[constant] = this.constants[constant];
-		}
-
-		if ( this._material ) {
-			this._material.uniforms = this.uniforms;
+			const value = this.constants[constant];
+			this.uniforms[constant] = value;
 		}
 	}
 
@@ -95,8 +88,7 @@ class ShaderFunction {
 		this._updateUniforms();
 
 		if ( this.output ) {
-			this.program.renderer.render(this.scene, this.program.camera, this.output.buffer, true);
-			console.log(this.output.rawData);
+			this.program.renderer.render(this.scene, this.program.camera, this.output.buffer);
 		}
 		else {
 			this.program.renderer.render(this.scene, this.program.camera);
@@ -111,8 +103,8 @@ class ShaderProgram {
 		this.camera = new THREE.Camera();
 		this.camera.position.z = 1;
 
-		this.width = 64;
-		this.height = 64;
+		this.width = 128;
+		this.height = 128;
 
 		this.initRenderer();
 	}
@@ -127,32 +119,19 @@ class ShaderProgram {
 		this.renderer = new THREE.WebGLRenderer();
 		this.renderer.setSize(this.width, this.height);
 
-		const gl = this.renderer.getContext();
-
-		const ext = gl.getExtension("WEBGL_color_buffer_float");
-
-		if ( !ext ) {
-			throw new Error("Failed to get the colorBuffer float ext");
-		}
-		else {
-			console.log("Got the float color buffer");
-		}
-
 		this.container = document.getElementById('container');
 		this.container.appendChild(this.renderer.domElement);
 	}
 
 	start() {
-		this.initRenderer();
-
 		this.frame();
-
-		requestAnimationFrame(() => {
-			this.frame();
-		});
 	}
 
 	frame() {
 		this._abstractCheck();
+
+		window.requestAnimationFrame(() => {
+			this.frame();
+		});
 	}
 }

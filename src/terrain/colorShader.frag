@@ -1,4 +1,5 @@
 uniform sampler2D height_map;
+uniform vec2 map_size;
 
 vec3 land_low =   vec3(0.0,     0.25,    0.0);
 vec3 land_high =  vec3(0.45312, 0.71093, 0.51953);
@@ -13,7 +14,7 @@ float flood = 0.2;
 float mount = 0.85;
 
 void main() {
-    vec2 our_pos = gl_FragCoord.xy;
+    vec2 our_pos = gl_FragCoord.xy / map_size;
     vec4 our_coord = texture2D(height_map, our_pos);
 
     float height = our_coord.x;
@@ -25,7 +26,7 @@ void main() {
 
     vec3 water_color = mix(water_low, water_high, water_height);    
 
-    vec3 mix_color = mix(ground_color, water_color, water_height / (water_height + height));
+    vec3 mix_color = mix(ground_color, water_color, 0.1);
 
-    gl_FragColor = vec4(mix_color, 1.0);
+    gl_FragColor = vec4(ground_color, 1.0);
 }

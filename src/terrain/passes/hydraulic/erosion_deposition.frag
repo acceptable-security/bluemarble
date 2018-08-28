@@ -4,20 +4,21 @@
 
 uniform sampler2D height_map; // Current heightmap
 uniform sampler2D velocity_field; // The velocity field
+uniform vec2 map_size;
 
-const float sediment_capacity = 1.0; // Sediment capacity constant
-const float sediment_disolve = 1.0; // Sediment disolving constant
-const float sediment_deposit = 1.0; // Sediment deposition constant
+const float sediment_capacity = 12.5; // Sediment capacity constant
+const float sediment_disolve = 0.0001 * 12.0; // Sediment disolving constant
+const float sediment_deposit = 0.0001 * 12.0; // Sediment deposition constant
 
 float pow2(float x) {
     return x * x;
 }
 
 void main() {
-    vec2 pos = gl_FragCoord.xy;
+    vec2 pos = gl_FragCoord.xy / map_size;
 
     vec4 our_coord = texture2D(height_map, pos);
-    vec2 offset = vec2(1.0, 0.0);
+    vec2 offset = vec2(1.0, 0.0) / map_size;
 
     // Calculate neighbor heights
     float our_left   = texture2D(height_map, pos - offset.xy).x;
@@ -32,7 +33,7 @@ void main() {
         2.0
     ));
 
-    // Calculate the localgle
+    // Calculate the local angle
     float r = pow2(normal.x) +
               pow2(normal.y) +
               pow2(normal.z);
