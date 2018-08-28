@@ -16,45 +16,39 @@ const float dY = 1.0; // ^^
 
 const float static_mult = A * gravity * (1.0 / l); // Precompute part of the computation
 
+float get_height(vec2 pos, vec2 offset) {
+    vec2 poff = pos + offset;
+
+    if ( poff.x < 0.0 || poff.x >= 1. / map_size.x ||
+         poff.y < 0.0 || poff.y >= 1. / map_size.y ) {
+        return -1.0;
+    }
+
+    vec4 coord = texture2D(height_map, poff);
+    return coord.x + coord.y;
+}
+
 vec4 get_delta(vec2 pos, float our_height) {
     vec2 offset = vec2(1.0, 0.0) / map_size;
     vec4 out_delta;
 
-    if ( pos.x > 0.0 ) {
-        // Get the delta for the left
-        vec4 left_coord = texture2D(height_map, pos - offset.xy);
-        out_delta.x = our_height - (left_coord.x + left_coord.y);
-    }
-    else {
-        out_delta.x = 0.0;
-    }
+    float left_height   = get_height(pos, -offset.xy);
+    float right_height  = get_height(pos,  offset.xy);
+    float top_height    = get_height(pos, -offset.yx);
+    float bottom_height = get_height(pos,  offset.yx);
 
-    if ( pos.x < 1./map_size.x ) {
-        // Get the delta for the right
-        vec4 right_coord = texture2D(height_map, pos + offset.xy);
-        out_delta.y = our_height - (right_coord.x + right_coord.y);
-    }
-    else {
-        out_delta.y = 0.0;
-    }
+    if ( left_height >= 0.0 ) out_delta.x = our_height - left_height;
+    else                      out_delta.x = 0.0;
 
-    if ( pos.y > 0.0 ) {
-        // Get the delta for the top
-        vec4 top_coord = texture2D(height_map, pos - offset.yx);
-        out_delta.z = our_height - (top_coord.x + top_coord.y);
-    }
-    else {
-        out_delta.z = 0.0;
-    }
 
-    if ( pos.y < 1./map_size.y ) {
-        // Get the delta for the bottom
-        vec4 bottom_coord = texture2D(height_map, pos + offset.yx);
-        out_delta.w = our_height - (bottom_coord.x + bottom_coord.y);
-    }
-    else {
-        out_delta.w = 0.0;
-    }
+    if ( right_height >= 0.0 ) out_delta.y = our_height - right_height;
+    else                       out_delta.y = 0.0;
+
+    if ( top_height >= 0.0 ) out_delta.z = our_height - top_height;
+    else                     out_delta.z = 0.0;
+
+    if ( bottom_height >= 0.0) out_delta.w = our_height - bottom_height;
+    else                       out_delta.w = 0.0;
 
     return out_delta;
 }

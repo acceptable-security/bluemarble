@@ -30,17 +30,14 @@ void main() {
     vec4 influx = get_influx(pos);
 
     // Calculuate the outflux
-    float our_left_flux = texture2D(flux_map, pos).x;
-    float our_right_flux = texture2D(flux_map, pos).y;
-    float our_top_flux = texture2D(flux_map, pos).z;
-    float our_bottom_flux = texture2D(flux_map, pos).w;
+    vec4 our_flux = texture2D(flux_map, pos);
 
     // Calculate the average water height
     float avg_water_height = texture2D(height_map, pos).w;
 
     // Calculate amount of water moving through X/Y pipes
-    float avg_water_x = (influx.x - our_left_flux + our_right_flux - influx.y) / 2.0;
-    float avg_water_y = (influx.z - our_top_flux + our_bottom_flux - influx.w) / 2.0;
+    float avg_water_x = ((influx.x - our_flux.x) + (our_flux.y - influx.y)) / 2.0;
+    float avg_water_y = ((influx.z - our_flux.z) + (our_flux.w - influx.w)) / 2.0;
 
     // Recalculate vector components
     gl_FragColor = vec4(

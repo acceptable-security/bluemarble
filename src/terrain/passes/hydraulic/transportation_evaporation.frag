@@ -22,10 +22,10 @@ void main() {
     vec4 our_velocity = texture2D(velocity_field, pos);
 
     // Take a eulerian step back
-    vec2 back_pos = pos - ((our_velocity.xy / map_size) * dt);
+    vec2 back_pos = (gl_FragCoord.xy - (our_velocity.xy * dt)) / map_size;
     back_pos = clamp(back_pos, vec2(0, 0), map_size);
     gl_FragColor.xw = our_coord.xw;
     gl_FragColor.z = texture2D(height_map, back_pos).z;
     // Evaporate
-    gl_FragColor.y = max(0.0, our_coord.y * (1.0 - evaporation * dt));
+    gl_FragColor.y = clamp(our_coord.y * (1.0 - evaporation * dt), 0.0, 1.0);
 }

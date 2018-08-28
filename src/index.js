@@ -8,6 +8,7 @@ class TerrainProgram extends ShaderProgram {
 
 		this.lastFrame = Date.now();
 		this.flip = false;
+		this.frames = 0;
 	}
 
 	_initConstants() {
@@ -98,13 +99,20 @@ class TerrainProgram extends ShaderProgram {
 			undefined
 		);
 
+		this.debug = new ShaderFunction(
+			this,
+			"terrain/debugShader.frag",
+			{ map_size: this.map_size },
+			{ debug_map: this.velocity_map },
+			undefined
+		);
+
 		this.map_gen.render();
 		this.water_increment.render();
 	}
 
 	frame() {
 		const dt = { type: 'f', value: (Date.now() - this.lastFrame) / 1000 };
-		// console.log(dt.value);
 		this.lastFrame = Date.now();
 
 		if ( this.flip ) {
@@ -114,6 +122,8 @@ class TerrainProgram extends ShaderProgram {
 			this.water_height.variables['flux_map'] = this.flux_map1;
 			this.velocity_field.variables['flux_map'] = this.flux_map1;
 			this.transportation_evaporation.variables['flux_map'] = this.flux_map1;
+
+			// this.debug.variables['debug_map'] = this.flux_map1;
 		}
 		else {
 			this.outflow_flux.variables['flux_map'] = this.flux_map1;
@@ -122,6 +132,8 @@ class TerrainProgram extends ShaderProgram {
 			this.water_height.variables['flux_map'] = this.flux_map2;
 			this.velocity_field.variables['flux_map'] = this.flux_map2;
 			this.transportation_evaporation.variables['flux_map'] = this.flux_map2;
+
+			// this.debug.variables['debug_map'] = this.flux_map2;
 		}
 
 		this.outflow_flux.constants['dt'] = dt;
@@ -135,13 +147,20 @@ class TerrainProgram extends ShaderProgram {
 		this.velocity_field.render();
 		this.erosion_deposition.render();
 		this.transportation_evaporation.render();
+		// this.debug.render();
 		this.pretty.render();
 
-		// console.log('frame');
+		// Debug info
+		const flux = this.flux_map2.rawData;
+		const avg_flux = flux.reduce((a, b) => a + b, 0.0) / flux.length;
+		const vel = this.velocity_map.rawData;
+		const avg_vel = vel.reduce((a, b) => a + b, 0.0) / vel.length;
+		console.log('Avg flux / vel', avg_flux.toFixed(24), avg_vel.toFixed(24));
+		this.frames++;
 	}
 }
 const program = new TerrainProgram();
 
 window.setInterval(() => {
 	program.frame();
-}, 50);
+}, 1000 / 60);

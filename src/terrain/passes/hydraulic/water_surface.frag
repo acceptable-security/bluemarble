@@ -51,5 +51,5 @@ void main() {
     // Calculate new water height
     gl_FragColor.xz = our_coord.xz;
     gl_FragColor.y = our_coord.y + (net_volume / (dX * dY));
-    gl_FragColor.w = (gl_FragColor.y - our_coord.y) / 2.0;
+    gl_FragColor.w = (gl_FragColor.y + our_coord.y) / 2.0;
 }

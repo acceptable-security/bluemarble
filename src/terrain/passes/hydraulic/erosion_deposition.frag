@@ -6,7 +6,7 @@ uniform sampler2D height_map; // Current heightmap
 uniform sampler2D velocity_field; // The velocity field
 uniform vec2 map_size;
 
-const float sediment_capacity = 12.5; // Sediment capacity constant
+const float sediment_capacity = 0.5; // Sediment capacity constant
 const float sediment_disolve = 0.0001 * 12.0; // Sediment disolving constant
 const float sediment_deposit = 0.0001 * 12.0; // Sediment deposition constant
 

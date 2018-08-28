@@ -26,7 +26,7 @@ void main() {
 
     vec3 water_color = mix(water_low, water_high, water_height);    
 
-    vec3 mix_color = mix(ground_color, water_color, 0.1);
+    vec3 mix_color = mix(ground_color, water_color, 0.3);
 
-    gl_FragColor = vec4(ground_color, 1.0);
+    gl_FragColor = vec4(mix_color, 1.0);
 }

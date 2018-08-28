@@ -52,18 +52,6 @@ class ShaderFunction {
 			fragmentShader: shaders[this.file]
 		});
 
-		// const square = new Float32Array([
-		// 	-1.0, -1.0,  1.0,
-		// 	 1.0, -1.0,  1.0,
-		// 	 1.0,  1.0,  1.0,
-
-		// 	 1.0,  1.0,  1.0,
-		// 	-1.0,  1.0,  1.0,
-		// 	-1.0, -1.0,  1.0
-		// ]);
-
-		// const geometry = new THREE.BufferGeometry();
-		// geometry.addAttribute('position', new THREE.BufferAttribute(square, 3));
 		this._mesh = new THREE.Mesh(new THREE.PlaneGeometry(this.program.width, this.program.height, this.program.width, this.program.height), this._material);
 		this.scene.add(this._mesh);
 	}
@@ -74,13 +62,23 @@ class ShaderFunction {
 				throw new Error(variable + " must be a ShaderVariable");
 			}
 
-			const texture = this.variables[variable].buffer.texture;
-			this.uniforms[variable] = { type: 't', value: texture };
+			const _texture = this.variables[variable].buffer.texture;
+			const texture = { type: 't', value: _texture };
+
+			this.uniforms[variable] = texture;
+
+			if ( this._material ) {
+				this._material.uniforms[variable] = texture;
+			}
 		}
 
 		for ( const constant in this.constants ) {
 			const value = this.constants[constant];
 			this.uniforms[constant] = value;
+
+			if ( this._material ) {
+				this._material.uniforms[constant] = value;
+			}
 		}
 	}
 
@@ -100,9 +98,6 @@ class ShaderProgram {
 	constructor() {
 		this._abstractCheck();
 
-		this.camera = new THREE.Camera();
-		this.camera.position.z = 1;
-
 		this.width = 128;
 		this.height = 128;
 
@@ -119,12 +114,22 @@ class ShaderProgram {
 		this.renderer = new THREE.WebGLRenderer();
 		this.renderer.setSize(this.width, this.height);
 
+		this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 1, 1000);
+		this.camera.position.z = 1;
+
+		// this.controls = new THREE.OrbitControls(this.camera);
+		// this.controls.update();
+
 		this.container = document.getElementById('container');
 		this.container.appendChild(this.renderer.domElement);
 	}
 
 	start() {
 		this.frame();
+
+		window.requestAnimationFrame(() => {
+			this.frame();
+		});
 	}
 
 	frame() {
